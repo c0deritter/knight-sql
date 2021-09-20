@@ -1,9 +1,9 @@
+import { Condition } from '.'
 import { From } from './From'
 import { Join } from './Join'
 import { OrderBy } from './OrderBy'
-import { getParameterQueryString } from './tools'
-import { Value } from './Value'
-import { Where } from './Where'
+import { getParameterToken } from './tools'
+import { ValueToSet } from './ValueToSet'
 
 export class Query {
 
@@ -11,13 +11,13 @@ export class Query {
 
   _selects: string[] = []
   _insertInto?: string
-  _values: Value[] = []
+  _valuesToSet: ValueToSet[] = []
   _update?: string
   _delete?: string
   _froms: From[] = []
   _joins: Join[] = []
   _usings: string[] = []
-  _wheres: Where[] = []
+  _conditions: Condition[] = []
   _orderBys: OrderBy[] = []
   _limit?: number
   _offset?: number
@@ -123,28 +123,32 @@ export class Query {
   }
 
   value(column: string, value: any): Query {
-    this._values.push(new Value(column, value))
+    this._valuesToSet.push(new ValueToSet(column, value))
     return this
   }
 
   set(column: string, value: any): Query {
-    this._values.push(new Value(column, value))
+    this._valuesToSet.push(new ValueToSet(column, value))
     return this
   }
 
-  where(expression: string, values: any[]): Query
-  where(column: string, value: any): Query
-  where(column: string, operator: string, value: any): Query
-  where(column: string, expression: string): Query
-  where(...where: Where[]): Query
-  where(logical: string, expression: string, values: any[]): Query
-  where(logical: string, column: string, value: any): Query
-  where(logical: string, column: string, operator: string, value: any): Query
-  where(logical: string, column: string, expression: string): Query
-  where(logical: string, ...where: Where[]): Query
-  
-  where(...args: any[]): Query {
-    this._wheres.push(new Where(...args))
+  where(...pieces: any[]): Query {
+    this._conditions.push(new Condition(...pieces))
+    return this
+  }
+
+  and(...pieces: any[]): Query {
+    this._conditions.push(new Condition('AND', ...pieces))
+    return this
+  }
+
+  or(...pieces: any[]): Query {
+    this._conditions.push(new Condition('OR', ...pieces))
+    return this
+  }
+
+  xor(...pieces: any[]): Query {
+    this._conditions.push(new Condition('XOR', ...pieces))
     return this
   }
 
@@ -170,20 +174,15 @@ export class Query {
   }
 
   postgres(): string {
-    return this.sql('postgres')
+    return this.sql('postgres').sql
   }
 
   mysql(): string {
-    return this.sql('mysql')
+    return this.sql('mysql').sql
   }
 
-  maria(): string {
-    return this.sql('mysql')
-  }
-
-  sql(db: string): string {
+  sql(db: string, parameterIndex: number = 1): { sql: string, parameterIndex: number } {
     let sql = ''
-    let parameterIndex = 1
 
     if (this._selects.length > 0) {
       sql += 'SELECT '
@@ -234,11 +233,11 @@ export class Query {
       sql += ' ' + join.sql()
     }
 
-    if (this._insertInto != undefined && this._values.length > 0) {
+    if (this._insertInto != undefined && this._valuesToSet.length > 0) {
       sql += ' ('
       let firstValue = true
 
-      for (let value of this._values) {
+      for (let value of this._valuesToSet) {
         if (! firstValue) {
           sql += ', '
         }
@@ -250,12 +249,12 @@ export class Query {
       sql += ') VALUES ('
 
       firstValue = true
-      for (let value of this._values) {
+      for (let value of this._valuesToSet) {
         if (! firstValue) {
           sql += ', '
         }
         
-        sql += getParameterQueryString(db, parameterIndex)
+        sql += getParameterToken(db, parameterIndex)
         parameterIndex++
         firstValue = false
       }
@@ -266,16 +265,16 @@ export class Query {
       sql += ' DEFAULT VALUES'
     }
 
-    if (this._update != undefined && this._values.length > 0) {
+    if (this._update != undefined && this._valuesToSet.length > 0) {
       sql += ' SET '
       let firstValue = true
 
-      for (let value of this._values) {
+      for (let value of this._valuesToSet) {
         if (! firstValue) {
           sql += ', '
         }
         
-        sql += value.column + ' = ' + getParameterQueryString(db, parameterIndex)
+        sql += value.column + ' = ' + getParameterToken(db, parameterIndex)
         parameterIndex++
         firstValue = false
       }
@@ -289,23 +288,13 @@ export class Query {
       onlyFrom = this._froms[0]
     }
 
-    if (this._wheres.length > 0) {
-      sql += ' WHERE '
+    if (this._conditions.length > 0) {
+      sql += ' WHERE'
 
-      let firstWhere = true
-      for (let where of this._wheres) {
-        if (! firstWhere) {
-          sql += ' ' + where.logical + ' '
-        }
-
-        let whereResult = <{ sql: string, parameterIndex: number }> where.sql(db, {
-          alias: onlyFrom != undefined ? onlyFrom.alias : undefined,
-          parameterIndex: parameterIndex
-        })
-
-        parameterIndex = whereResult.parameterIndex
-        sql += whereResult.sql
-        firstWhere = false
+      for (let condition of this._conditions) {
+        let result = condition.sql(db, parameterIndex)
+        sql += ' ' + result.sql
+        parameterIndex = result.parameterIndex
       }
     }
 
@@ -330,12 +319,12 @@ export class Query {
     }
 
     if (this._limit != undefined) {
-      sql += ' LIMIT ' + getParameterQueryString(db, parameterIndex)
+      sql += ' LIMIT ' + getParameterToken(db, parameterIndex)
       parameterIndex++
     }
     
     if (this._offset != undefined) {
-      sql += ' OFFSET ' + getParameterQueryString(db, parameterIndex)
+      sql += ' OFFSET ' + getParameterToken(db, parameterIndex)
       parameterIndex++
     }
 
@@ -353,22 +342,21 @@ export class Query {
       }
     }
     
-    if (sql.length > 0) {
-      sql += ';'
+    return {
+      sql: sql,
+      parameterIndex: parameterIndex
     }
-
-    return sql
   }
 
   values(): any[] {
     let values: any[] = []
 
-    for (let value of this._values) {
+    for (let value of this._valuesToSet) {
       values.push(value.value)
     }
 
-    for (let where of this._wheres) {
-      values.push(...where.values())
+    for (let condition of this._conditions) {
+      values.push(...condition.values())
     }
 
     if (this._limit != undefined) {

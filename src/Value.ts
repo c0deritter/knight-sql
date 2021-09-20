@@ -1,9 +1,11 @@
 export class Value {
-  column: string
   value: any
 
-  constructor(column: string, value: any) {
-    this.column = column
+  constructor(value: any) {
     this.value = value
   }
+}
+
+export function value(value: any): Value {
+  return new Value(value)
 }
