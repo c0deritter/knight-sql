@@ -99,6 +99,19 @@ query.postgres() == 'SELECT * FROM table WHERE id = $1'
 query.values() == [ 1 ]
 ```
 
+#### Aliases
+
+You can give aliases seperately and they will be concatenated to the next string without a space.
+
+```typescript
+sql.select('*').from('table AS t').where('t.', 'id =', value(1))
+
+query.mysql() == 'SELECT * FROM table WHERE t.id = ?'
+query.postgres() == 'SELECT * FROM table WHERE t.id = $1'
+
+query.values() == [ 1 ]
+```
+
 #### (NOT) IN helpers
 
 It will translate an array into the corresponding SQL representation.
