@@ -2,7 +2,6 @@ import { Condition } from './Condition'
 import { From } from './From'
 import { Join } from './Join'
 import { getParameterToken } from './tools'
-import { ValueToSet } from './ValueToSet'
 
 export class Query {
 
@@ -10,7 +9,7 @@ export class Query {
 
   _selects: string[] = []
   _insertInto?: string
-  _valuesToSet: ValueToSet[] = []
+  _valuesToSet: [string, any][] = []
   _update?: string
   _delete?: string
   _froms: From[] = []
@@ -124,12 +123,12 @@ export class Query {
   }
 
   value(column: string, value: any): Query {
-    this._valuesToSet.push(new ValueToSet(column, value))
+    this._valuesToSet.push([column, value])
     return this
   }
 
   set(column: string, value: any): Query {
-    this._valuesToSet.push(new ValueToSet(column, value))
+    this._valuesToSet.push([column, value])
     return this
   }
 
@@ -267,7 +266,7 @@ export class Query {
           sql += ', '
         }
         
-        sql += value.column
+        sql += value[0]
         firstValue = false
       }
 
@@ -299,7 +298,7 @@ export class Query {
           sql += ', '
         }
         
-        sql += value.column + ' = ' + getParameterToken(db, parameterIndex)
+        sql += value[0] + ' = ' + getParameterToken(db, parameterIndex)
         parameterIndex++
         firstValue = false
       }
@@ -386,7 +385,7 @@ export class Query {
     let values: any[] = []
 
     for (let value of this._valuesToSet) {
-      values.push(value.value)
+      values.push(value[1])
     }
 
     for (let condition of this._wheres) {
