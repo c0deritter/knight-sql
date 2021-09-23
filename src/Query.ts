@@ -161,17 +161,7 @@ export class Query {
     let sql = ''
 
     if (this._selects.length > 0) {
-      sql += 'SELECT '
-      let firstSelect = true
-
-      for (let select of this._selects) {
-        if (! firstSelect) {
-          sql += ', '
-        }
-
-        sql += select
-        firstSelect = false
-      }
+      sql += 'SELECT ' + this._selects.join(', ')
     }
 
     if (this._insertInto != undefined) {
@@ -281,17 +271,7 @@ export class Query {
     }
 
     if (this._orderBys.length > 0) {
-      sql += ' ORDER BY '
-      let firstOrderBy = true
-
-      for (let orderBy of this._orderBys) {
-        if (! firstOrderBy) {
-          sql += ', '
-        }
-
-        sql += orderBy
-        firstOrderBy = false
-      }
+      sql += ' ORDER BY ' + this._orderBys.join(', ')
     }
 
     if (this._limit != undefined) {
