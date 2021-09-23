@@ -35,10 +35,9 @@ export default class {
   }
 }
 
+export * from './Condition'
 export * from './From'
 export * from './Join'
-export * from './OrderBy'
-export * from './Condition'
 export * from './Query'
 export * from './Value'
 export * from './ValueToSet'

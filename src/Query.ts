@@ -1,7 +1,6 @@
 import { Condition } from './Condition'
 import { From } from './From'
 import { Join } from './Join'
-import { OrderBy } from './OrderBy'
 import { getParameterToken } from './tools'
 import { ValueToSet } from './ValueToSet'
 
@@ -20,7 +19,7 @@ export class Query {
   _wheres: Condition[] = []
   _groupBys: string[] = []
   _havings: Condition[] = []
-  _orderBys: OrderBy[] = []
+  _orderBys: string[] = []
   _limit?: number
   _offset?: number
   _returnings: string[] = []
@@ -179,9 +178,8 @@ export class Query {
     return this
   }
 
-  orderBy(column: string, direction?: string): Query {
-    let orderByObj = new OrderBy(column, direction)
-    this._orderBys.push(orderByObj)
+  orderBy(...orderBys: string[]): Query {
+    this._orderBys.push(...orderBys)
     return this
   }
 
@@ -349,13 +347,7 @@ export class Query {
           sql += ', '
         }
 
-        let orderByResult = <{ sql: string, parameterIndex: number }> orderBy.sql(db, {
-          alias: onlyFrom != undefined ? onlyFrom.alias : undefined,
-          parameterIndex: parameterIndex
-        })
-        
-        parameterIndex = orderByResult.parameterIndex
-        sql += orderByResult.sql
+        sql += orderBy
         firstOrderBy = false
       }
     }

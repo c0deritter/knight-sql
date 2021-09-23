@@ -69,6 +69,11 @@ describe('Query', function() {
         expect(query.mysql()).to.equal('SELECT * FROM table WHERE column1 > ? GROUP BY column1, column2 HAVING MAX(column1) > ? ORDER BY column1')
         expect(query.values()).to.deep.equal([1,5])
       })
+
+      it('should add an ORDER BY statement', function () {
+        let query = sql.select('*').from('table').orderBy('column1', 'column2 ASC', 'column3, column4 DESC')
+        expect(query.mysql()).to.deep.equal('SELECT * FROM table ORDER BY column1, column2 ASC, column3, column4 DESC')
+      })
     })
 
     describe('DELETE FROM', function() {
@@ -156,6 +161,11 @@ describe('Query', function() {
         let query = sql.select('*').from('table').where('column1 >', value(1)).groupBy('column1', 'column2').having('MAX(column1) >', value(5)).orderBy('column1')
         expect(query.postgres()).to.equal('SELECT * FROM table WHERE column1 > $1 GROUP BY column1, column2 HAVING MAX(column1) > $2 ORDER BY column1')
         expect(query.values()).to.deep.equal([1,5])
+      })
+
+      it('should add an ORDER BY statement', function () {
+        let query = sql.select('*').from('table').orderBy('column1', 'column2 ASC', 'column3, column4 DESC')
+        expect(query.postgres()).to.deep.equal('SELECT * FROM table ORDER BY column1, column2 ASC, column3, column4 DESC')
       })
     })
 
