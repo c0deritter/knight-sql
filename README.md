@@ -88,6 +88,8 @@ query.postgres() == 'SELECT * FROM table WHERE id = 1'
 query.values() == []
 ```
 
+#### Values
+
 You can also denote a value which will be replaced through a parameter token.
 
 ```typescript
@@ -106,10 +108,52 @@ You can give aliases seperately and they will be concatenated to the next string
 ```typescript
 sql.select('*').from('table AS t').where('t.', 'id =', value(1))
 
-query.mysql() == 'SELECT * FROM table WHERE t.id = ?'
-query.postgres() == 'SELECT * FROM table WHERE t.id = $1'
+query.mysql() == 'SELECT * FROM table AS t WHERE t.id = ?'
+query.postgres() == 'SELECT * FROM table AS t WHERE t.id = $1'
 
 query.values() == [ 1 ]
+```
+
+#### IS (NOT) NULL helpers
+
+It will translate a JavaScript `null` value into the corresponding SQL representation.
+
+```typescript
+sql.select('*').from('table').where('id IS', null)
+
+query.mysql() == 'SELECT * FROM table WHERE id IS NULL'
+query.postgres() == 'SELECT * FROM table WHERE id IS NULL'
+
+query.values() == []
+
+// same if it is presented as a value
+
+sql.select('*').from('table').where('id IS', value(null))
+
+query.mysql() == 'SELECT * FROM table WHERE id IS NULL'
+query.postgres() == 'SELECT * FROM table WHERE id IS NULL'
+
+query.values() == [null]
+```
+
+It can even replace your operator if you were giving it separately. It works for `=`, `<>` and `!=`.
+
+```typescript
+sql.select('*').from('table').where('id', '=', null)
+
+query.mysql() == 'SELECT * FROM table WHERE id IS NULL'
+query.postgres() == 'SELECT * FROM table WHERE id IS NULL'
+
+query.values() == [null]
+
+// same if it is presented as a value
+
+sql.select('*').from('table').where('id', '=', value(null))
+
+query.mysql() == 'SELECT * FROM table WHERE id IS NULL'
+query.postgres() == 'SELECT * FROM table WHERE id IS NULL'
+
+query.values() == [1, 2, 3]
 ```
 
 #### (NOT) IN helpers
@@ -150,48 +194,6 @@ sql.select('*').from('table').where('id', '=', value([1,2,3]))
 
 query.mysql() == 'SELECT * FROM table WHERE id IN (?, ?, ?)'
 query.postgres() == 'SELECT * FROM table WHERE id IN ($1, $2, $3)'
-
-query.values() == [1, 2, 3]
-```
-
-#### IS (NOT) NULL helpers
-
-It will translate a JavaScript `null` value into the corresponding SQL representation.
-
-```typescript
-sql.select('*').from('table').where('id IS', null)
-
-query.mysql() == 'SELECT * FROM table WHERE id IS NULL'
-query.postgres() == 'SELECT * FROM table WHERE id IS NULL'
-
-query.values() == []
-
-// same if it is presented as a value
-
-sql.select('*').from('table').where('id IS', value(null))
-
-query.mysql() == 'SELECT * FROM table WHERE id IS NULL'
-query.postgres() == 'SELECT * FROM table WHERE id IS NULL'
-
-query.values() == [null]
-```
-
-It can even replace your operator if you were giving it separately. It works for `=`, `<>` and `!=`.
-
-```typescript
-sql.select('*').from('table').where('id', '=', null)
-
-query.mysql() == 'SELECT * FROM table WHERE id IS NULL'
-query.postgres() == 'SELECT * FROM table WHERE id IS NULL'
-
-query.values() == [null]
-
-// same with if it is presented as a value
-
-sql.select('*').from('table').where('id', '=', value(null))
-
-query.mysql() == 'SELECT * FROM table WHERE id IS NULL'
-query.postgres() == 'SELECT * FROM table WHERE id IS NULL'
 
 query.values() == [1, 2, 3]
 ```

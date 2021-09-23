@@ -1,4 +1,4 @@
-import { Condition } from '.'
+import { Condition } from './Condition'
 import { From } from './From'
 import { Join } from './Join'
 import { OrderBy } from './OrderBy'
@@ -17,7 +17,9 @@ export class Query {
   _froms: From[] = []
   _joins: Join[] = []
   _usings: string[] = []
-  _conditions: Condition[] = []
+  _wheres: Condition[] = []
+  _groupBys: string[] = []
+  _havings: Condition[] = []
   _orderBys: OrderBy[] = []
   _limit?: number
   _offset?: number
@@ -132,28 +134,53 @@ export class Query {
     return this
   }
 
-  where(...pieces: any[]): Query {
-    this._conditions.push(new Condition(...pieces))
+  where(...conditions: any[]): Query {
+    this._wheres.push(new Condition(...conditions))
     return this
   }
 
-  and(...pieces: any[]): Query {
-    this._conditions.push(new Condition('AND', ...pieces))
+  and(...conditions: any[]): Query {
+    this._wheres.push(new Condition('AND', ...conditions))
     return this
   }
 
-  or(...pieces: any[]): Query {
-    this._conditions.push(new Condition('OR', ...pieces))
+  or(...conditions: any[]): Query {
+    this._wheres.push(new Condition('OR', ...conditions))
     return this
   }
 
-  xor(...pieces: any[]): Query {
-    this._conditions.push(new Condition('XOR', ...pieces))
+  xor(...conditions: any[]): Query {
+    this._wheres.push(new Condition('XOR', ...conditions))
     return this
   }
 
-  orderBy(orderBy: string, direction?: string): Query {
-    let orderByObj = new OrderBy(orderBy, direction)
+  groupBy(...columns: string[]): Query {
+    this._groupBys.push(...columns)
+    return this
+  }
+
+  having(...conditions: any[]): Query {
+    this._havings.push(new Condition(...conditions))
+    return this
+  }
+
+  andHaving(...conditions: any[]): Query {
+    this._havings.push(new Condition('AND', ...conditions))
+    return this
+  }
+
+  orHaving(...conditions: any[]): Query {
+    this._havings.push(new Condition('OR', ...conditions))
+    return this
+  }
+
+  xorHaving(...conditions: any[]): Query {
+    this._havings.push(new Condition('XOR', ...conditions))
+    return this
+  }
+
+  orderBy(column: string, direction?: string): Query {
+    let orderByObj = new OrderBy(column, direction)
     this._orderBys.push(orderByObj)
     return this
   }
@@ -280,7 +307,7 @@ export class Query {
       }
     }
 
-    // we determine if there is exactly one From because if there is
+    // we determine if there is exactly one FROM because if there is
     // we want to prepend the alias to every column name
     let onlyFrom: From|undefined = undefined
 
@@ -288,10 +315,25 @@ export class Query {
       onlyFrom = this._froms[0]
     }
 
-    if (this._conditions.length > 0) {
+    if (this._wheres.length > 0) {
       sql += ' WHERE'
 
-      for (let condition of this._conditions) {
+      for (let condition of this._wheres) {
+        let result = condition.sql(db, parameterIndex)
+        sql += ' ' + result.sql
+        parameterIndex = result.parameterIndex
+      }
+    }
+
+    if (this._groupBys.length > 0) {
+      let groupBys = this._groupBys.join(', ')
+      sql += ' GROUP BY ' + groupBys
+    }
+
+    if (this._havings.length > 0) {
+      sql += ' HAVING'
+
+      for (let condition of this._havings) {
         let result = condition.sql(db, parameterIndex)
         sql += ' ' + result.sql
         parameterIndex = result.parameterIndex
@@ -355,7 +397,11 @@ export class Query {
       values.push(value.value)
     }
 
-    for (let condition of this._conditions) {
+    for (let condition of this._wheres) {
+      values.push(...condition.values())
+    }
+
+    for (let condition of this._havings) {
       values.push(...condition.values())
     }
 

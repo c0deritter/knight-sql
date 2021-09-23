@@ -58,51 +58,55 @@ describe('Query', function() {
         expect(query.mysql()).to.equal('SELECT * FROM table')
         expect(query.values()).to.deep.equal([])
       })
+
+      it('should add a GROUP BY statement', function () {
+        let query = sql.select('*').from('table').groupBy('column1', 'column2').orderBy('column1')
+        expect(query.mysql()).to.deep.equal('SELECT * FROM table GROUP BY column1, column2 ORDER BY column1')
+      })
+
+      it('should add arbitrary conditions as having', function() {
+        let query = sql.select('*').from('table').where('column1 >', value(1)).groupBy('column1', 'column2').having('MAX(column1) >', value(5)).orderBy('column1')
+        expect(query.mysql()).to.equal('SELECT * FROM table WHERE column1 > ? GROUP BY column1, column2 HAVING MAX(column1) > ? ORDER BY column1')
+        expect(query.values()).to.deep.equal([1,5])
+      })
     })
 
     describe('DELETE FROM', function() {
       it('should create a DELETE FROM with the fine grained methods', function() {
         let query = sql.delete_().from('table')
-        let sqlString = query.mysql()
-        expect(sqlString).to.equal('DELETE FROM table')
+        expect(query.mysql()).to.equal('DELETE FROM table')
       })
 
       it('should create a DELETE FROM with the shortcut method', function() {
         let query = sql.deleteFrom('table')
-        let sqlString = query.mysql()
-        expect(sqlString).to.equal('DELETE FROM table')
+        expect(query.mysql()).to.equal('DELETE FROM table')
       })
 
       it('should create a DELETE table FROM', function() {
         let query = sql.delete_('table1').from('table2')
-        let sqlString = query.mysql()
-        expect(sqlString).to.equal('DELETE table1 FROM table2')
+        expect(query.mysql()).to.equal('DELETE table1 FROM table2')
       })
     })
 
     describe('USING', function() {
       it('should accept arbitrary many using statements', function() {
         let query = sql.deleteFrom('table1').using('table2', 'table3')
-        let sqlString = query.mysql()
-        expect(sqlString).to.equal('DELETE FROM table1 USING table2, table3')
+        expect(query.mysql()).to.equal('DELETE FROM table1 USING table2, table3')
       })
 
       it('should accept a statement containing comma separated using statements', function() {
         let query = sql.deleteFrom('table1').using('table2,       table3')
-        let sqlString = query.mysql()
-        expect(sqlString).to.equal('DELETE FROM table1 USING table2, table3')
+        expect(query.mysql()).to.equal('DELETE FROM table1 USING table2, table3')
       })
 
       it('should accept a mix of statements containing either one or comma separated using statements', function() {
         let query = sql.deleteFrom('table1').using('table2', 'table3,     table4', 'table5')
-        let sqlString = query.mysql()
-        expect(sqlString).to.equal('DELETE FROM table1 USING table2, table3, table4, table5')
+        expect(query.mysql()).to.equal('DELETE FROM table1 USING table2, table3, table4, table5')
       })
 
       it('should eliminate duplicates', function() {
         let query = sql.deleteFrom('table1').using('table2', 'table3,     table2', 'table2')
-        let sqlString = query.mysql()
-        expect(sqlString).to.equal('DELETE FROM table1 USING table2, table3')
+        expect(query.mysql()).to.equal('DELETE FROM table1 USING table2, table3')
       })
     })
   })
@@ -142,25 +146,33 @@ describe('Query', function() {
         expect(query.postgres()).to.equal('SELECT * FROM table')
         expect(query.values()).to.deep.equal([])
       })
+
+      it('should add a GROUP BY statement', function () {
+        let query = sql.select('*').from('table').groupBy('column1', 'column2').orderBy('column1')
+        expect(query.postgres()).to.deep.equal('SELECT * FROM table GROUP BY column1, column2 ORDER BY column1')
+      })
+
+      it('should add arbitrary conditions as having', function() {
+        let query = sql.select('*').from('table').where('column1 >', value(1)).groupBy('column1', 'column2').having('MAX(column1) >', value(5)).orderBy('column1')
+        expect(query.postgres()).to.equal('SELECT * FROM table WHERE column1 > $1 GROUP BY column1, column2 HAVING MAX(column1) > $2 ORDER BY column1')
+        expect(query.values()).to.deep.equal([1,5])
+      })
     })
 
     describe('DELETE FROM', function() {
       it('should create a DELETE FROM with the fine grained methods', function() {
         let query = sql.delete_().from('table')
-        let sqlString = query.postgres()
-        expect(sqlString).to.equal('DELETE FROM table')
+        expect(query.postgres()).to.equal('DELETE FROM table')
       })
 
       it('should create a DELETE FROM with the shortcut method', function() {
         let query = sql.deleteFrom('table')
-        let sqlString = query.postgres()
-        expect(sqlString).to.equal('DELETE FROM table')
+        expect(query.postgres()).to.equal('DELETE FROM table')
       })
 
       it('should create a DELETE table FROM', function() {
         let query = sql.delete_('table1').from('table2')
-        let sqlString = query.postgres()
-        expect(sqlString).to.equal('DELETE table1 FROM table2')
+        expect(query.postgres()).to.equal('DELETE table1 FROM table2')
       })
     })
 
@@ -173,20 +185,17 @@ describe('Query', function() {
 
       it('should accept a statement containing comma separated using statements', function() {
         let query = sql.deleteFrom('table1').using('table2,       table3')
-        let sqlString = query.postgres()
-        expect(sqlString).to.equal('DELETE FROM table1 USING table2, table3')
+        expect(query.postgres()).to.equal('DELETE FROM table1 USING table2, table3')
       })
 
       it('should accept a mix of statements containing either one or comma separated using statements', function() {
         let query = sql.deleteFrom('table1').using('table2', 'table3,     table4', 'table5')
-        let sqlString = query.postgres()
-        expect(sqlString).to.equal('DELETE FROM table1 USING table2, table3, table4, table5')
+        expect(query.postgres()).to.equal('DELETE FROM table1 USING table2, table3, table4, table5')
       })
 
       it('should eliminate duplicates', function() {
         let query = sql.deleteFrom('table1').using('table2', 'table3,     table2', 'table2')
-        let sqlString = query.postgres()
-        expect(sqlString).to.equal('DELETE FROM table1 USING table2, table3')
+        expect(query.postgres()).to.equal('DELETE FROM table1 USING table2, table3')
       })
     })
   })
