@@ -45,7 +45,7 @@ export class Condition {
         }
       }
       else if (typeof piece == 'number') {
-        sql += piece
+        sql += space + piece
       }
       else if (piece === null) {
         sql += space + 'NULL'
@@ -111,7 +111,7 @@ export class Condition {
 
     return {
       sql: sql,
-      parameterIndex: parameterIndex // ++ in front increases first and then assigns
+      parameterIndex: parameterIndex
     }
   }
 

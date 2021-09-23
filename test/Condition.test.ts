@@ -16,6 +16,12 @@ describe('Condition', function () {
       expect(condition.values()).to.deep.equal([0, 10])
     })
 
+    it('should render a number', function() {
+      let condition = new Condition('column =', 1, 'AND')
+      expect(condition.mysql()).to.equal('column = 1 AND')
+      expect(condition.values()).to.deep.equal([])
+    })
+
     it('should render multiple values', function() {
       let condition = new Condition(value(1), value(2))
       expect(condition.mysql()).to.equal('? ?')
@@ -161,6 +167,12 @@ describe('Condition', function () {
       let condition = new Condition('column', '>', value(0), 'AND', 'column', '<', value(10))
       expect(condition.postgres()).to.equal('column > $1 AND column < $2')
       expect(condition.values()).to.deep.equal([0, 10])
+    })
+
+    it('should render a number', function() {
+      let condition = new Condition('column =', 1, 'AND')
+      expect(condition.postgres()).to.equal('column = 1 AND')
+      expect(condition.values()).to.deep.equal([])
     })
 
     it('should render multiple values', function() {
