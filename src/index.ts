@@ -4,34 +4,29 @@ import { Query } from './Query'
 
 export default class {
 
-  static select(select: string, alias?: string): Query {
+  static select(...selects: string[]): Query {
     let query = new Query
-    query.select(select, alias)
-    return query
+    return query.select(...selects)
   }
 
   static insertInto(insertInto: string): Query {
     let query = new Query
-    query.insertInto(insertInto)
-    return query
+    return query.insertInto(insertInto)
   }
 
   static update(update: string): Query {
     let query = new Query
-    query.update(update)
-    return query
+    return query.update(update)
   }
 
   static delete_(delete_?: string) {
     let query = new Query
-    query.delete_(delete_)
-    return query
+    return query.delete_(delete_)
   }
 
   static deleteFrom(from: string): Query {
     let query = new Query
-    query.deleteFrom(from)
-    return query
+    return query.deleteFrom(from)
   }
 }
 

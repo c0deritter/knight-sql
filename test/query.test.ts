@@ -3,26 +3,6 @@ import 'mocha'
 import sql, { value } from '../src'
 
 describe('Query', function() {
-  describe('select', function() {
-    it('should select a single column', function() {
-      let query = sql.select('column')
-      expect(query._selects.length).to.equal(1)
-      expect(query._selects[0]).to.equal('column')
-    })
-  
-    it('should select a single column with an alias', function() {
-      let query = sql.select('column', 'c')
-      expect(query._selects.length).to.equal(1)
-      expect(query._selects[0]).to.equal('column c')
-    })
-  
-    it('should select an expresssion', function() {
-      let query = sql.select('column c')
-      expect(query._selects.length).to.equal(1)
-      expect(query._selects[0]).to.equal('column c')
-    })
-  })
-
   describe('MySql', function() {
     describe('INSERT INTO', function() {
       it('should create an insert into SQL statement', function() {
@@ -41,21 +21,15 @@ describe('Query', function() {
     })
 
     describe('SELECT', function() {
-      it('should create a select SQL statement', function() {
-        let query = sql.select('*').from('table').where('a =', value('a')).and('b >', value('b'))
-        expect(query.mysql()).to.equal('SELECT * FROM table WHERE a = ? AND b > ?')
-        expect(query.values()).to.deep.equal(['a','b'])
-      })
-
-      it('should create a select SQL statement connected through OR', function() {
-        let query = sql.select('*').from('table').where('a =', value('a')).and('b >', value('b'))
-        expect(query.mysql()).to.equal('SELECT * FROM table WHERE a = ? AND b > ?')
-        expect(query.values()).to.deep.equal(['a','b'])
-      })
-
-      it('should create a select SQL statement without a where clause', function() {
+      it('should create a SELECT statement', function() {
         let query = sql.select('*').from('table')
         expect(query.mysql()).to.equal('SELECT * FROM table')
+        expect(query.values()).to.deep.equal([])
+      })
+
+      it('should create a SELECT DISTINCT statement', function() {
+        let query = sql.select('DISTINCT ON (a) a b c').from('table')
+        expect(query.mysql()).to.equal('SELECT DISTINCT ON (a) a b c FROM table')
         expect(query.values()).to.deep.equal([])
       })
 
@@ -90,6 +64,20 @@ describe('Query', function() {
       it('should create a DELETE table FROM', function() {
         let query = sql.delete_('table1').from('table2')
         expect(query.mysql()).to.equal('DELETE table1 FROM table2')
+      })
+    })
+
+    describe('WHERE', function() {
+      it('should create a WHERE statement', function() {
+        let query = sql.select('*').from('table').where('a =', value('a')).and('b >', value('b'))
+        expect(query.mysql()).to.equal('SELECT * FROM table WHERE a = ? AND b > ?')
+        expect(query.values()).to.deep.equal(['a','b'])
+      })
+
+      it('should create a WHERE statement connected through OR', function() {
+        let query = sql.select('*').from('table').where('a =', value('a')).and('b >', value('b'))
+        expect(query.mysql()).to.equal('SELECT * FROM table WHERE a = ? AND b > ?')
+        expect(query.values()).to.deep.equal(['a','b'])
       })
     })
 
@@ -134,21 +122,15 @@ describe('Query', function() {
     })
 
     describe('SELECT', function() {
-      it('should create a select SQL statement', function() {
-        let query = sql.select('*').from('table').where('a =', value('a')).and('b >', value('b'))
-        expect(query.postgres()).to.equal('SELECT * FROM table WHERE a = $1 AND b > $2')
-        expect(query.values()).to.deep.equal(['a','b'])
-      })
-
-      it('should create a select SQL statement connected through OR', function() {
-        let query = sql.select('*').from('table').where('a =', value('a')).and('b >', value('b'))
-        expect(query.postgres()).to.equal('SELECT * FROM table WHERE a = $1 AND b > $2')
-        expect(query.values()).to.deep.equal(['a','b'])
-      })
-
       it('should create a select SQL statement without a where clause', function() {
         let query = sql.select('*').from('table')
         expect(query.postgres()).to.equal('SELECT * FROM table')
+        expect(query.values()).to.deep.equal([])
+      })
+
+      it('should create a SELECT DISTINCT statement', function() {
+        let query = sql.select('DISTINCT ON (a) a b c').from('table')
+        expect(query.postgres()).to.equal('SELECT DISTINCT ON (a) a b c FROM table')
         expect(query.values()).to.deep.equal([])
       })
 
@@ -183,6 +165,20 @@ describe('Query', function() {
       it('should create a DELETE table FROM', function() {
         let query = sql.delete_('table1').from('table2')
         expect(query.postgres()).to.equal('DELETE table1 FROM table2')
+      })
+    })
+
+    describe('WHERE', function() {
+      it('should create a WHERE statement', function() {
+        let query = sql.select('*').from('table').where('a =', value('a')).and('b >', value('b'))
+        expect(query.postgres()).to.equal('SELECT * FROM table WHERE a = $1 AND b > $2')
+        expect(query.values()).to.deep.equal(['a','b'])
+      })
+
+      it('should create a WHERE statement connected through OR', function() {
+        let query = sql.select('*').from('table').where('a =', value('a')).and('b >', value('b'))
+        expect(query.postgres()).to.equal('SELECT * FROM table WHERE a = $1 AND b > $2')
+        expect(query.values()).to.deep.equal(['a','b'])
       })
     })
 
