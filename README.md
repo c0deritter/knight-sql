@@ -84,9 +84,9 @@ query.sql() == 'SELECT t1.id, t2.name FROM table1 t1 LEFT JOIN table2 t2 ON t1.i
 
 ### WHERE conditions
 
-A where condition can contain any value. 
+A where condition can contain any JavaScript value. The following sections describe what will happen.
 
-#### Strings and number
+#### Strings and numbers
 
 A WHERE condition can be a list of strings or numbers that will be concatenated together.
 
@@ -151,7 +151,7 @@ sql.select('*').from('table').where('id IS', value(null))
 query.mysql() == 'SELECT * FROM table WHERE id IS NULL'
 query.postgres() == 'SELECT * FROM table WHERE id IS NULL'
 
-query.values() == [null]
+query.values() == [ null ]
 ```
 
 It can even replace your operator if you were giving it separately. It works for `=`, `<>` and `!=`.
@@ -186,7 +186,7 @@ sql.select('*').from('table').where('id IN', value([1,2,3]))
 query.mysql() == 'SELECT * FROM table WHERE id IN (?, ?, ?)'
 query.postgres() == 'SELECT * FROM table WHERE id IN ($1, $2, $3)'
 
-query.values() == [1, 2, 3]
+query.values() == [ 1, 2, 3 ]
 ```
 
 It can even replace your operator if you were giving it separately. It works for `=`, `<>` and `!=`.
@@ -230,7 +230,7 @@ sql.select('*').from('table')
 query.mysql() == 'SELECT * FROM table WHERE age > ? AND (name LIKE ? OR name LIKE ?)'
 query.postgres()) == 'SELECT * FROM table WHERE age > $1 AND (name LIKE $2 OR name LIKE $3)'
 
-query.values() == [10, '%ert%', '%tre%']
+query.values() == [ 10, '%ert%', '%tre%' ]
 ```
 
 #### Sub queries
@@ -247,7 +247,7 @@ sql.select('*').from('table')
 query.mysql() == 'SELECT * FROM table WHERE id = (SELECT MAX(id) FROM table WHERE age > ?) AND name LIKE ?'
 query.postgres()) == 'SELECT * FROM table WHERE id = (SELECT MAX(id) FROM table WHERE age > $1) AND name LIKE $2'
 
-query.values() == [30, '%ert%']
+query.values() == [ 30, '%ert%' ]
 ```
 
 #### Any other value
@@ -259,13 +259,14 @@ let birthday = new Date(1982, 3, 28)
 let query = sql.select('*').from('table').where('birthday =', birthday)
 
 query.mysql() == 'SELECT * FROM table WHERE birthday = ?'
-query.values() == [birthday]
+query.values() == [ birthday ]
 ```
 
 ### GROUP BY
 
 ```typescript
 sql.select('*').from('table').groupBy('id', 'name, email')
+// SELECT * FROM table GROUP BY id, name, email
 ```
 
 The parameters for `groupBy` is just a list of strings that will be concatenated separated by a comma.
@@ -274,6 +275,7 @@ The parameters for `groupBy` is just a list of strings that will be concatenated
 
 ```typescript
 sql.select('*').from('table').orderBy('id', 'name DESC', 'age, email ASC').limit(10).offset(100)
+// SELECT * FROM table ORDER BY id, name DESC, age, email ASC LIMIT 10 OFFSET 100
 ```
 
 The parameters for `orderBy` is just a list of strings that will be concatenated separated by a comma.
@@ -282,4 +284,5 @@ The parameters for `orderBy` is just a list of strings that will be concatenated
 
 ```typescript
 sql.select('*').from('table').returning('*')
+// SELECT * FROM table RETURNING *
 ```
