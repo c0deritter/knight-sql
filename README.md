@@ -23,6 +23,20 @@ sql.update('table').set('name', 'Sebastian').where('id = 1')
 sql.deleteFrom('table').where('id = 1')
 ```
 
+The parameter of `insertInto`, `update` and `deleteFrom` is just a string. You can input anything you like.
+
+```typescript
+sql.update('ONLY table AS t')
+// UPDATE ONLY table AS t
+```
+
+The parameter of select is a list of strings that will be concatenated with seperating commas. Here, you also can input anything you like.
+
+```typescript
+sql.select('DISTINCT ON (a) a', 'b, c')
+// SELECT DISTINCT ON (a) a, b, c
+```
+
 ### Render to SQL and get values array
 
 ```typescript
@@ -70,6 +84,10 @@ query.sql() == 'SELECT t1.id, t2.name FROM table1 t1 LEFT JOIN table2 t2 ON t1.i
 
 ### WHERE conditions
 
+A where condition can contain any value. 
+
+#### Strings and number
+
 A WHERE condition can be a list of strings or numbers that will be concatenated together.
 
 ```typescript
@@ -114,7 +132,7 @@ query.postgres() == 'SELECT * FROM table AS t WHERE t.id = $1'
 query.values() == [ 1 ]
 ```
 
-#### IS (NOT) NULL helpers
+#### IS NULL helpers
 
 It will translate a JavaScript `null` value into the corresponding SQL representation.
 
@@ -126,7 +144,7 @@ query.postgres() == 'SELECT * FROM table WHERE id IS NULL'
 
 query.values() == []
 
-// same if it is presented as a value
+// is also works if null is marked as a value
 
 sql.select('*').from('table').where('id IS', value(null))
 
@@ -140,23 +158,16 @@ It can even replace your operator if you were giving it separately. It works for
 
 ```typescript
 sql.select('*').from('table').where('id', '=', null)
+// SELECT * FROM table WHERE id IS NULL
 
-query.mysql() == 'SELECT * FROM table WHERE id IS NULL'
-query.postgres() == 'SELECT * FROM table WHERE id IS NULL'
+sql.select('*').from('table').where('id', '!=', null)
+// SELECT * FROM table WHERE id IS NOT NULL
 
-query.values() == [null]
-
-// same if it is presented as a value
-
-sql.select('*').from('table').where('id', '=', value(null))
-
-query.mysql() == 'SELECT * FROM table WHERE id IS NULL'
-query.postgres() == 'SELECT * FROM table WHERE id IS NULL'
-
-query.values() == [1, 2, 3]
+sql.select('*').from('table').where('id', '<>', null)
+// SELECT * FROM table WHERE id IS NOT NULL
 ```
 
-#### (NOT) IN helpers
+#### IN helpers
 
 It will translate an array into the corresponding SQL representation.
 
@@ -168,7 +179,7 @@ query.postgres() == 'SELECT * FROM table WHERE id IN (1, 2, 3)'
 
 query.values() == []
 
-// same with an array presented as a value
+// it also works if the array is marked as a value
 
 sql.select('*').from('table').where('id IN', value([1,2,3]))
 
@@ -182,20 +193,13 @@ It can even replace your operator if you were giving it separately. It works for
 
 ```typescript
 sql.select('*').from('table').where('id', '=', [1,2,3])
+// SELECT * FROM table WHERE id IN (1, 2, 3)
 
-query.mysql() == 'SELECT * FROM table WHERE id IN (1, 2, 3)'
-query.postgres() == 'SELECT * FROM table WHERE id IN (1, 2, 3)'
+sql.select('*').from('table').where('id', '!=', [1,2,3])
+// SELECT * FROM table WHERE id NOT IN (1, 2, 3)
 
-query.values() == []
-
-// same with an array presented as a value
-
-sql.select('*').from('table').where('id', '=', value([1,2,3]))
-
-query.mysql() == 'SELECT * FROM table WHERE id IN (?, ?, ?)'
-query.postgres() == 'SELECT * FROM table WHERE id IN ($1, $2, $3)'
-
-query.values() == [1, 2, 3]
+sql.select('*').from('table').where('id', '<>', [1,2,3])
+// SELECT * FROM table WHERE id NOT IN (1, 2, 3)
 ```
 
 #### AND, OR, XOR
@@ -246,13 +250,35 @@ query.postgres()) == 'SELECT * FROM table WHERE id = (SELECT MAX(id) FROM table 
 query.values() == [30, '%ert%']
 ```
 
-### Order By, Limit, Offest
+#### Any other value
+
+Any other value like a `Date` will be replaced by a parameter token and is put into the array of values.
 
 ```typescript
-sql.select('*').from('table').orderBy('id', 'DESC').limit(10).offset(100)
+let birthday = new Date(1982, 3, 28)
+let query = sql.select('*').from('table').where('birthday =', birthday)
+
+query.mysql() == 'SELECT * FROM table WHERE birthday = ?'
+query.values() == [birthday]
 ```
 
-### Returning (Postgres)
+### GROUP BY
+
+```typescript
+sql.select('*').from('table').groupBy('id', 'name, email')
+```
+
+The parameters for `groupBy` is just a list of strings that will be concatenated separated by a comma.
+
+### ORDER BY, LIMIT, OFFSET
+
+```typescript
+sql.select('*').from('table').orderBy('id', 'name DESC', 'age, email ASC').limit(10).offset(100)
+```
+
+The parameters for `orderBy` is just a list of strings that will be concatenated separated by a comma.
+
+### RETURNING (Postgres)
 
 ```typescript
 sql.select('*').from('table').returning('*')
