@@ -65,6 +65,11 @@ describe('Query', function() {
         let query = sql.delete_('table1').from('table2')
         expect(query.mysql()).to.equal('DELETE table1 FROM table2')
       })
+
+      it('should create a DELETE USING', function() {
+        let query = sql.deleteFrom('table1').using('table2', 'table3', 'table4, table5')
+        expect(query.mysql()).to.equal('DELETE FROM table1 USING table2, table3, table4, table5')
+      })
     })
 
     describe('WHERE', function() {
@@ -78,28 +83,6 @@ describe('Query', function() {
         let query = sql.select('*').from('table').where('a =', value('a')).and('b >', value('b'))
         expect(query.mysql()).to.equal('SELECT * FROM table WHERE a = ? AND b > ?')
         expect(query.values()).to.deep.equal(['a','b'])
-      })
-    })
-
-    describe('USING', function() {
-      it('should accept arbitrary many using statements', function() {
-        let query = sql.deleteFrom('table1').using('table2', 'table3')
-        expect(query.mysql()).to.equal('DELETE FROM table1 USING table2, table3')
-      })
-
-      it('should accept a statement containing comma separated using statements', function() {
-        let query = sql.deleteFrom('table1').using('table2,       table3')
-        expect(query.mysql()).to.equal('DELETE FROM table1 USING table2, table3')
-      })
-
-      it('should accept a mix of statements containing either one or comma separated using statements', function() {
-        let query = sql.deleteFrom('table1').using('table2', 'table3,     table4', 'table5')
-        expect(query.mysql()).to.equal('DELETE FROM table1 USING table2, table3, table4, table5')
-      })
-
-      it('should eliminate duplicates', function() {
-        let query = sql.deleteFrom('table1').using('table2', 'table3,     table2', 'table2')
-        expect(query.mysql()).to.equal('DELETE FROM table1 USING table2, table3')
       })
     })
   })
@@ -166,6 +149,11 @@ describe('Query', function() {
         let query = sql.delete_('table1').from('table2')
         expect(query.postgres()).to.equal('DELETE table1 FROM table2')
       })
+
+      it('should create a DELETE USING', function() {
+        let query = sql.deleteFrom('table1').using('table2', 'table3', 'table4, table5')
+        expect(query.postgres()).to.equal('DELETE FROM table1 USING table2, table3, table4, table5')
+      })
     })
 
     describe('WHERE', function() {
@@ -179,29 +167,6 @@ describe('Query', function() {
         let query = sql.select('*').from('table').where('a =', value('a')).and('b >', value('b'))
         expect(query.postgres()).to.equal('SELECT * FROM table WHERE a = $1 AND b > $2')
         expect(query.values()).to.deep.equal(['a','b'])
-      })
-    })
-
-    describe('USING', function() {
-      it('should accept arbitrary many using statements', function() {
-        let query = sql.deleteFrom('table1').using('table2', 'table3')
-        let sqlString = query.postgres()
-        expect(sqlString).to.equal('DELETE FROM table1 USING table2, table3')
-      })
-
-      it('should accept a statement containing comma separated using statements', function() {
-        let query = sql.deleteFrom('table1').using('table2,       table3')
-        expect(query.postgres()).to.equal('DELETE FROM table1 USING table2, table3')
-      })
-
-      it('should accept a mix of statements containing either one or comma separated using statements', function() {
-        let query = sql.deleteFrom('table1').using('table2', 'table3,     table4', 'table5')
-        expect(query.postgres()).to.equal('DELETE FROM table1 USING table2, table3, table4, table5')
-      })
-
-      it('should eliminate duplicates', function() {
-        let query = sql.deleteFrom('table1').using('table2', 'table3,     table2', 'table2')
-        expect(query.postgres()).to.equal('DELETE FROM table1 USING table2, table3')
       })
     })
   })

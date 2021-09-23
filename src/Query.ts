@@ -70,27 +70,7 @@ export class Query {
     * Supported in PostgreSQL 9.1+ (https://stackoverflow.com/questions/11753904/postgresql-delete-with-inner-join)
    */
   using(...usings: string[]): Query {
-    for (let using of usings) {
-      if (using.indexOf(',')) {
-        let splits = using.split(',')
-
-        for (let split of splits) {
-          let trimmed = split.trim()
-
-          if (this._usings.indexOf(trimmed) == -1) {
-            this._usings.push(trimmed)
-          }
-        }
-      }
-      else {
-        let trimmed = using.trim()
-
-        if (this._usings.indexOf(trimmed) == -1) {
-          this._usings.push(trimmed)
-        }
-      }
-    }
-    
+    this._usings.push(...usings)
     return this
   }
 
@@ -221,8 +201,7 @@ export class Query {
     }
 
     if (this._usings.length > 0) {
-      let usings = this._usings.join(', ')
-      sql += ' USING ' + usings
+      sql += ' USING ' + this._usings.join(', ')
     }
 
     for (let join of this._joins) {
