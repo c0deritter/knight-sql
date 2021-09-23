@@ -276,14 +276,6 @@ export class Query {
       }
     }
 
-    // we determine if there is exactly one FROM because if there is
-    // we want to prepend the alias to every column name
-    let onlyFrom: From|undefined = undefined
-
-    if (this._froms.length == 1) {
-      onlyFrom = this._froms[0]
-    }
-
     if (this._wheres.length > 0) {
       sql += ' WHERE'
 
