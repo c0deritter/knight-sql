@@ -18,7 +18,10 @@ export class Condition {
     for (let i = 0; i < this.pieces.length; i++) {
       let piece = this.pieces[i]
 
-      if (typeof piece == 'string') {
+      if (piece === undefined || piece === '') {
+        continue
+      }
+      else if (typeof piece == 'string') {
         let nextPiece = this.pieces.length > i+1 ? this.pieces[i+1] : undefined
 
         if (piece.length > 0 && piece[piece.length - 1] == '.') {
@@ -140,6 +143,8 @@ export class Condition {
       }
       else if (piece instanceof Query) {
         values.push(...piece.values())
+      }
+      else if (piece === undefined || piece === '') {
       }
       else if (typeof piece == 'string') {
       }

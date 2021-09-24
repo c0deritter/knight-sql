@@ -4,6 +4,18 @@ import sql, { Condition, value } from '../src'
 
 describe('Condition', function () {
   describe('mysql', function () {
+    it('should ignore empty strings', function() {
+      let condition = new Condition('', 'a', '')
+      expect(condition.mysql()).to.equal('a')
+      expect(condition.values()).to.deep.equal([])
+    })
+
+    it('should ignore undefined', function() {
+      let condition = new Condition(undefined, 'a', undefined)
+      expect(condition.mysql()).to.equal('a')
+      expect(condition.values()).to.deep.equal([])
+    })
+
     it('should render a simple comparison', function () {
       let condition = new Condition('column', '=', value(1))
       expect(condition.mysql()).to.equal('column = ?')
@@ -157,6 +169,18 @@ describe('Condition', function () {
   })
 
   describe('postgres', function () {
+    it('should ignore empty strings', function() {
+      let condition = new Condition('', 'a', '')
+      expect(condition.postgres()).to.equal('a')
+      expect(condition.values()).to.deep.equal([])
+    })
+
+    it('should ignore undefined', function() {
+      let condition = new Condition(undefined, 'a', undefined)
+      expect(condition.postgres()).to.equal('a')
+      expect(condition.values()).to.deep.equal([])
+    })
+
     it('should render a simple comparison', function () {
       let condition = new Condition('column', '=', value(1))
       expect(condition.postgres()).to.equal('column = $1')
