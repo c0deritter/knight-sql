@@ -107,7 +107,7 @@ export class Condition {
         parameterIndex++
       }
 
-      if (i == 0) {
+      if (space.length == 0) {
         space = ' '
       }
     }

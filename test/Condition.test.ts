@@ -5,15 +5,15 @@ import sql, { Condition, value } from '../src'
 describe('Condition', function () {
   describe('mysql', function () {
     it('should ignore empty strings', function() {
-      let condition = new Condition('', 'a', '')
-      expect(condition.mysql()).to.equal('a')
-      expect(condition.values()).to.deep.equal([])
+      let condition = new Condition('', 'a', '=', value(1), '')
+      expect(condition.mysql()).to.equal('a = ?')
+      expect(condition.values()).to.deep.equal([1])
     })
 
     it('should ignore undefined', function() {
-      let condition = new Condition(undefined, 'a', undefined)
-      expect(condition.mysql()).to.equal('a')
-      expect(condition.values()).to.deep.equal([])
+      let condition = new Condition(undefined, 'a', '=', value(1), undefined)
+      expect(condition.mysql()).to.equal('a = ?')
+      expect(condition.values()).to.deep.equal([1])
     })
 
     it('should render a simple comparison', function () {
@@ -170,15 +170,15 @@ describe('Condition', function () {
 
   describe('postgres', function () {
     it('should ignore empty strings', function() {
-      let condition = new Condition('', 'a', '')
-      expect(condition.postgres()).to.equal('a')
-      expect(condition.values()).to.deep.equal([])
+      let condition = new Condition('', 'a', '=', value(1), '')
+      expect(condition.postgres()).to.equal('a = $1')
+      expect(condition.values()).to.deep.equal([1])
     })
 
     it('should ignore undefined', function() {
-      let condition = new Condition(undefined, 'a', undefined)
-      expect(condition.postgres()).to.equal('a')
-      expect(condition.values()).to.deep.equal([])
+      let condition = new Condition(undefined, 'a', '=', value(1), undefined)
+      expect(condition.postgres()).to.equal('a = $1')
+      expect(condition.values()).to.deep.equal([1])
     })
 
     it('should render a simple comparison', function () {
