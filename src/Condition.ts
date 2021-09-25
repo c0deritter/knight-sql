@@ -84,6 +84,9 @@ export class Condition {
       
           sql += ')'
         }
+        else if (piece.value === null) {
+          sql += space + 'NULL'
+        }
         else {
           sql += space + getParameterToken(db, parameterIndex)
 
@@ -133,6 +136,8 @@ export class Condition {
       if (piece instanceof Value) {
         if (piece.value instanceof Array) {
           values.push(...piece.value)
+        }
+        else if (piece.value === null) {
         }
         else {
           values.push(piece.value)

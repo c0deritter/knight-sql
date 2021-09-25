@@ -102,8 +102,8 @@ describe('Condition', function () {
 
     it('should render null to an SQL NULL string', function() {
       let condition = new Condition(value(0), value(null), value(1))
-      expect(condition.mysql()).to.equal('? ? ?')
-      expect(condition.values()).to.deep.equal([0,null,1])
+      expect(condition.mysql()).to.equal('? NULL ?')
+      expect(condition.values()).to.deep.equal([0,1])
     })
 
     it('should render replace an equals operator with an IS operator if the following piece is null', function() {
@@ -114,8 +114,8 @@ describe('Condition', function () {
 
     it('should render replace an equals operator with an IS operator if the following piece is a value which is null', function() {
       let condition = new Condition('=', value(null))
-      expect(condition.mysql()).to.equal('IS ?')
-      expect(condition.values()).to.deep.equal([null])
+      expect(condition.mysql()).to.equal('IS NULL')
+      expect(condition.values()).to.deep.equal([])
     })
 
     it('should render replace a <> operator with an IS NOT operator if the following piece is null', function() {
@@ -126,8 +126,8 @@ describe('Condition', function () {
 
     it('should render replace an <> operator with an IS NOT operator if the following piece is a value which is null', function() {
       let condition = new Condition(value(0), '<>', value(null))
-      expect(condition.mysql()).to.equal('? IS NOT ?')
-      expect(condition.values()).to.deep.equal([0,null])
+      expect(condition.mysql()).to.equal('? IS NOT NULL')
+      expect(condition.values()).to.deep.equal([0])
     })
 
     it('should render replace a != operator with an IS NOT operator if the following piece is null', function() {
@@ -138,8 +138,8 @@ describe('Condition', function () {
 
     it('should render replace an != operator with an IS NOT operator if the following piece is a value which is null', function() {
       let condition = new Condition(value(0), '!=', value(null))
-      expect(condition.mysql()).to.equal('? IS NOT ?')
-      expect(condition.values()).to.deep.equal([0,null])
+      expect(condition.mysql()).to.equal('? IS NOT NULL')
+      expect(condition.values()).to.deep.equal([0])
     })
 
     it('should render a condition', function() {
@@ -267,8 +267,8 @@ describe('Condition', function () {
 
     it('should render null to an SQL NULL string', function() {
       let condition = new Condition(value(0), value(null), value(1))
-      expect(condition.postgres()).to.equal('$1 $2 $3')
-      expect(condition.values()).to.deep.equal([0, null, 1])
+      expect(condition.postgres()).to.equal('$1 NULL $2')
+      expect(condition.values()).to.deep.equal([0,1])
     })
     it('should render replace an = operator with an IS operator if the following piece is null', function() {
       let condition = new Condition('=', null)
@@ -278,8 +278,8 @@ describe('Condition', function () {
 
     it('should render replace an ? operator with an IS operator if the following piece is a value which is null', function() {
       let condition = new Condition(value(0), '=', value(null), value(1))
-      expect(condition.postgres()).to.equal('$1 IS $2 $3')
-      expect(condition.values()).to.deep.equal([0, null, 1])
+      expect(condition.postgres()).to.equal('$1 IS NULL $2')
+      expect(condition.values()).to.deep.equal([0,1])
     })
 
     it('should render replace a <> operator with an IS NOT operator if the following piece is null', function() {
@@ -290,8 +290,8 @@ describe('Condition', function () {
 
     it('should render replace an <> operator with an IS NOT operator if the following piece is a value which is null', function() {
       let condition = new Condition(value(0), '<>', value(null), value(1))
-      expect(condition.postgres()).to.equal('$1 IS NOT $2 $3')
-      expect(condition.values()).to.deep.equal([0, null, 1])
+      expect(condition.postgres()).to.equal('$1 IS NOT NULL $2')
+      expect(condition.values()).to.deep.equal([0,1])
     })
 
     it('should render replace a != operator with an IS NOT operator if the following piece is null', function() {
@@ -302,8 +302,8 @@ describe('Condition', function () {
 
     it('should render replace an != operator with an IS NOT operator if the following piece is a value which is null', function() {
       let condition = new Condition(value(0), '!=', value(null), value(1))
-      expect(condition.postgres()).to.equal('$1 IS NOT $2 $3')
-      expect(condition.values()).to.deep.equal([0,null,1])
+      expect(condition.postgres()).to.equal('$1 IS NOT NULL $2')
+      expect(condition.values()).to.deep.equal([0,1])
     })
 
     it('should render a condition', function() {
