@@ -1,11 +1,10 @@
 import { ParameterTokens } from '.'
 import { Query } from './Query'
 import { SqlPiece } from './SqlPiece'
-import { createParameterToken } from './tools'
 import { Value } from './Value'
 
 export class Condition extends SqlPiece {
-  
+
   pieces: any[] = []
 
   constructor(...pieces: any[]) {
@@ -51,7 +50,7 @@ export class Condition extends SqlPiece {
           for (let i = 0; i < piece.value.length; i++) {
             parameters.push(parameterTokens.create(db))
           }
-    
+
           sql += space + '(' + parameters.join(', ') + ')'
         }
         else if (piece.value === null) {
