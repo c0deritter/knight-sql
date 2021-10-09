@@ -1,10 +1,10 @@
 # Knight SQL by Coderitter
 
-A data structure to create SQL queries. I behaves like a string concatenation tool with some SQL specific caveats.
+A data structure to create SQL queries. It mainly concatenates given strings which can be combined with objects that do magic while being rendered to strings.
 
 ## Related packages
 
-Use [knight-orm](https://github.com/c0deritter/knight-orm) if you are looking for a more powerful solution to access a database.
+Use [knight-orm](https://github.com/c0deritter/knight-orm) if you are looking for a powerful solution to access a database.
 
 ## Install
 
@@ -82,13 +82,21 @@ let query = sql.select('t1.id, t2.name').from('table1 t1').join('left', 'table2'
 query.sql() == 'SELECT t1.id, t2.name FROM table1 t1 LEFT JOIN table2 t2 ON t1.id = t2.table1Id'
 ```
 
-### WHERE conditions
+### Condition
 
-A where condition can contain any JavaScript value. The following sections describe what will happen.
+A condition is used for `WHERE` and `HAVING` clauses. It is basically an array which can contain value of any type. The following will happen.
+
+- Strings and numbers are concatenated into the resulting SQL string
+- An object of type `Query` will be surrounded with brackets to represent a sub query
+- There can be objects following the `SqlPiece` interface which can to magic while rendering to SQL strings
+- A `null` value is becoming an SQL `NULL`
+- An array will be converted to `(value1, value2, ...)`
+- An object of type `Value` will be replaced through a parameter token i.e. `?` for MySql
+- Any other values like of type `Date` will also be replaced through a parameter token
 
 #### Strings and numbers
 
-A WHERE condition can be a list of strings or numbers that will be concatenated together.
+A condition can be a list of strings or numbers that will be concatenated together.
 
 ```typescript
 sql.select('*').from('table').where('id', '=', '1')
@@ -132,74 +140,109 @@ query.postgres() == 'SELECT * FROM table AS t WHERE t.id = $1'
 query.values() == [ 1 ]
 ```
 
-#### IS NULL helpers
+#### SqlPiece
 
-It will translate a JavaScript `null` value into the corresponding SQL representation.
+An object of type `SqlPiece` renders to SQL. It is used to do some magic while converting to an SQL string. For example, this library comes with a class `Brackets` which will 
+
+This package comes with the following implementations.
+
+- `Brackets`: Adds brackets around a condition but only if it is not empty.
+- `Comparison`: Especially helps with `IS` and `IN` operators
+
+Here is a simple example for a new class implemented by you.
 
 ```typescript
-sql.select('*').from('table').where('id IS', null)
+import sql, { ParameterTokens, SqlPiece } from 'knight-sql'
 
-query.mysql() == 'SELECT * FROM table WHERE id IS NULL'
-query.postgres() == 'SELECT * FROM table WHERE id IS NULL'
+class MoreIntelligent extends SqlPiece {
 
-query.values() == []
+  iq: number
 
-// is also works if null is marked as a value
+  constructor(iq: number) {
+    super()
+    this.iq = iq
+  }
 
-sql.select('*').from('table').where('id IS', value(null))
-
-query.mysql() == 'SELECT * FROM table WHERE id IS NULL'
-query.postgres() == 'SELECT * FROM table WHERE id IS NULL'
-
-query.values() == [ null ]
+  // return the SQL string which can include parameters
+  abstract sql(db: string, parameterTokens: ParameterTokens = new ParameterTokens): string {
+    return 'iq > ' + parameterToken.create(db)
+  }
+  
+  // return the values for parameters contained in the SQL string
+  abstract values(): any[] {
+    return [ this.iq ]
+  }
+}
 ```
 
-It can even replace your operator if you were giving it separately. It works for `=`, `<>` and `!=`.
+The class `ParameterTokens` creates a parameter token specific to the used database system. In the case of PostgreSQL it also keeps track of the last parameter index to create the parameter tokens like `$1`, `$2` and `$3`.
+
+#### Comparison (SqlPiece)
+
+The class `Comparison` helps in creating simple comparisons which follow the pattern `<column> <operator> <value>`.
 
 ```typescript
-sql.select('*').from('table').where('id', '=', null)
-// SELECT * FROM table WHERE id IS NULL
+import { comparison } from `knight-sql`
 
-sql.select('*').from('table').where('id', '!=', null)
-// SELECT * FROM table WHERE id IS NOT NULL
+let c1 = comparison('iq', 100)
+c1.mysql() == 'iq = ?'
+c1.values() == [ 100 ]
 
-sql.select('*').from('table').where('id', '<>', null)
-// SELECT * FROM table WHERE id IS NOT NULL
+let c2 = comparison('iq', '>', 100)
+c2.mysql() == 'iq > ?'
+c2.values() == [ 100 ]
 ```
 
-#### IN helpers
-
-It will translate an array into the corresponding SQL representation.
+It will also help with `IS NULL` and `IS NOT NULL`.
 
 ```typescript
-sql.select('*').from('table').where('id IN', [1,2,3])
+let c1 = comparison('iq', null)
+c1.mysql() == 'iq IS NULL'
+c1.values() == []
 
-query.mysql() == 'SELECT * FROM table WHERE id IN (1, 2, 3)'
-query.postgres() == 'SELECT * FROM table WHERE id IN (1, 2, 3)'
+let c2 = comparison('iq', '=', null)
+c2.mysql() == 'iq IS NULL'
+c2.values() == []
 
-query.values() == []
+let c3 = comparison('iq', '!=', null)
+c3.mysql() == 'iq IS NOT NULL'
+c3.values() == []
 
-// it also works if the array is marked as a value
-
-sql.select('*').from('table').where('id IN', value([1,2,3]))
-
-query.mysql() == 'SELECT * FROM table WHERE id IN (?, ?, ?)'
-query.postgres() == 'SELECT * FROM table WHERE id IN ($1, $2, $3)'
-
-query.values() == [ 1, 2, 3 ]
+let c4 = comparison('iq', '<>', null)
+c4.mysql() == 'iq IS NOT NULL'
+c4.values() == []
 ```
 
-It can even replace your operator if you were giving it separately. It works for `=`, `<>` and `!=`.
+And it will help with the `IN` operator.
 
 ```typescript
-sql.select('*').from('table').where('id', '=', [1,2,3])
-// SELECT * FROM table WHERE id IN (1, 2, 3)
+let c1 = comparison('iq', [ 100 ])
+c1.mysql() == 'iq IN (?)'
+c1.values() == [ 100 ]
 
-sql.select('*').from('table').where('id', '!=', [1,2,3])
-// SELECT * FROM table WHERE id NOT IN (1, 2, 3)
+let c2 = comparison('iq', '=', [ 100 ])
+c2.mysql() == 'iq IN (?)'
+c2.values() == [ 100 ]
 
-sql.select('*').from('table').where('id', '<>', [1,2,3])
-// SELECT * FROM table WHERE id NOT IN (1, 2, 3)
+let c3 = comparison('iq', '!=', [ 100 ])
+c3.mysql() == 'iq NOT IN (?)'
+c3.values() == []
+
+let c4 = comparison('iq', '<>', [])
+c4.mysql() == 'iq NOT IN (?)'
+c4.values() == []
+
+// in the case the array is empty, undefined or null,
+// the value of the column is never inside the given set
+let c5 = comparison('iq', '=', [])
+c5.mysql() == '1 = 2'
+c5.values() == []
+
+// in the case the array is empty, undefined or null,
+// the value of the column is never not inside the given set
+let c5 = comparison('iq', '!=', [])
+c5.mysql() == '1 = 1'
+c5.values() == []
 ```
 
 #### AND, OR, XOR
@@ -250,9 +293,9 @@ query.postgres()) == 'SELECT * FROM table WHERE id = (SELECT MAX(id) FROM table 
 query.values() == [ 30, '%ert%' ]
 ```
 
-#### Any other value
+#### Arbitrary value
 
-Any other value like a `Date` will be replaced by a parameter token and is put into the array of values.
+Arbitrary values like of type `Date` will be replaced by a parameter token and are put into the array of values.
 
 ```typescript
 let birthday = new Date(1982, 3, 28)

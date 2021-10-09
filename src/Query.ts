@@ -1,9 +1,10 @@
+import { ParameterTokens } from '.'
 import { Condition } from './Condition'
 import { From } from './From'
 import { Join } from './Join'
-import { getParameterToken } from './tools'
+import { SqlPiece } from './SqlPiece'
 
-export class Query {
+export class Query extends SqlPiece {
 
   _selects: string[] = []
   _insertInto?: string
@@ -149,15 +150,7 @@ export class Query {
     return this
   }
 
-  postgres(): string {
-    return this.sql('postgres').sql
-  }
-
-  mysql(): string {
-    return this.sql('mysql').sql
-  }
-
-  sql(db: string, parameterIndex: number = 1): { sql: string, parameterIndex: number } {
+  sql(db: string, parameterTokens: ParameterTokens = new ParameterTokens): string {
     let sql = ''
 
     if (this._selects.length > 0) {
@@ -219,8 +212,7 @@ export class Query {
           sql += ', '
         }
         
-        sql += getParameterToken(db, parameterIndex)
-        parameterIndex++
+        sql += parameterTokens.create(db)
         firstValue = false
       }
 
@@ -239,8 +231,7 @@ export class Query {
           sql += ', '
         }
         
-        sql += value[0] + ' = ' + getParameterToken(db, parameterIndex)
-        parameterIndex++
+        sql += value[0] + ' = ' + parameterTokens.create(db)
         firstValue = false
       }
     }
@@ -249,9 +240,7 @@ export class Query {
       sql += ' WHERE'
 
       for (let condition of this._wheres) {
-        let result = condition.sql(db, parameterIndex)
-        sql += ' ' + result.sql
-        parameterIndex = result.parameterIndex
+        sql += ' ' + condition.sql(db, parameterTokens)
       }
     }
 
@@ -264,9 +253,7 @@ export class Query {
       sql += ' HAVING'
 
       for (let condition of this._havings) {
-        let result = condition.sql(db, parameterIndex)
-        sql += ' ' + result.sql
-        parameterIndex = result.parameterIndex
+        sql += ' ' + condition.sql(db, parameterTokens)
       }
     }
 
@@ -275,13 +262,11 @@ export class Query {
     }
 
     if (this._limit != undefined) {
-      sql += ' LIMIT ' + getParameterToken(db, parameterIndex)
-      parameterIndex++
+      sql += ' LIMIT ' + parameterTokens.create(db)
     }
     
     if (this._offset != undefined) {
-      sql += ' OFFSET ' + getParameterToken(db, parameterIndex)
-      parameterIndex++
+      sql += ' OFFSET ' + parameterTokens.create(db)
     }
 
     if (this._returnings.length > 0) {
@@ -298,10 +283,7 @@ export class Query {
       }
     }
     
-    return {
-      sql: sql,
-      parameterIndex: parameterIndex
-    }
+    return sql
   }
 
   values(): any[] {

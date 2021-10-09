@@ -1,4 +1,4 @@
-export function getParameterToken(db: string, parameterIndex: number = 1): string {
+export function createParameterToken(db: string, parameterIndex: number = 1): string {
   if (db == 'mysql' || db == 'maria') {
     return '?'
   }

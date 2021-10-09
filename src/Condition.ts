@@ -1,19 +1,22 @@
-import { Query } from '.'
-import { getParameterToken } from './tools'
+import { ParameterTokens } from '.'
+import { Query } from './Query'
+import { SqlPiece } from './SqlPiece'
+import { createParameterToken } from './tools'
 import { Value } from './Value'
 
-export class Condition {
+export class Condition extends SqlPiece {
   
   pieces: any[] = []
 
   constructor(...pieces: any[]) {
+    super()
     this.pieces = pieces
   }
 
-  sql(db: string, parameterIndex: number = 1): { sql: string, parameterIndex: number } {
+  sql(db: string, parameterTokens: ParameterTokens = new ParameterTokens): string {
     let sql = ''
     let space = ''
-    let nextStringPieceWithoutSpace = 0
+    let withoutSpaceIndex = 0
 
     for (let i = 0; i < this.pieces.length; i++) {
       let piece = this.pieces[i]
@@ -22,25 +25,10 @@ export class Condition {
         continue
       }
       else if (typeof piece == 'string') {
-        let nextPiece = this.pieces.length > i+1 ? this.pieces[i+1] : undefined
-
         if (piece.length > 0 && piece[piece.length - 1] == '.') {
-          nextStringPieceWithoutSpace = i+1
+          withoutSpaceIndex = i + 1
         }
-        else if (piece == '=' && (nextPiece === null || nextPiece.value === null)) {
-          piece = 'IS'
-        }
-        else if ((piece == '!=' || piece == '<>') && (nextPiece === null || nextPiece.value === null)) {
-          piece = 'IS NOT'
-        }
-        else if (piece == '=' && (nextPiece instanceof Array || nextPiece instanceof Value && nextPiece.value instanceof Array)) {
-          piece = 'IN'
-        }
-        else if ((piece == '!=' || piece == '<>') && (nextPiece instanceof Array || nextPiece.value instanceof Array)) {
-          piece = 'NOT IN'
-        }
-
-        if (nextStringPieceWithoutSpace == i) {
+        if (withoutSpaceIndex == i) {
           sql += piece
         }
         else {
@@ -54,60 +42,33 @@ export class Condition {
         sql += space + 'NULL'
       }
       else if (piece instanceof Array) {
-        sql += space + '('
-
-        for (let i = 0; i < piece.length; i++) {
-          if (i > 0) {
-            sql += ', '
-          }
-
-          sql += piece[i]
-        }
-    
-        sql += ')'
+        sql += space + '(' + piece.join(', ') + ')'
       }
       else if (piece instanceof Value) {
         if (piece.value instanceof Array) {
-          sql += space + '('
+          let parameters: string[] = []
 
           for (let i = 0; i < piece.value.length; i++) {
-            if (i > 0) {
-              sql += ', '
-            }
-    
-            sql += getParameterToken(db, parameterIndex)
-            
-            if (parameterIndex) {
-              parameterIndex++
-            }
+            parameters.push(parameterTokens.create(db))
           }
-      
-          sql += ')'
+    
+          sql += space + '(' + parameters.join(', ') + ')'
         }
         else if (piece.value === null) {
           sql += space + 'NULL'
         }
         else {
-          sql += space + getParameterToken(db, parameterIndex)
-
-          if (parameterIndex) {
-            parameterIndex++
-          }
+          sql += space + parameterTokens.create(db)
         }
       }
-      else if (piece instanceof Condition) {
-        let result = piece.sql(db, parameterIndex)
-        sql += space + result.sql
-        parameterIndex = result.parameterIndex
-      }
       else if (piece instanceof Query) {
-        let result = piece.sql(db, parameterIndex)
-        sql += space + '(' + result.sql + ')'
-        parameterIndex = result.parameterIndex
+        sql += space + '(' + piece.sql(db, parameterTokens) + ')'
+      }
+      else if (piece instanceof SqlPiece) {
+        sql += space + piece.sql(db, parameterTokens)
       }
       else {
-        sql += space + getParameterToken(db, parameterIndex)
-        parameterIndex++
+        sql += space + parameterTokens.create(db)
       }
 
       if (space.length == 0) {
@@ -115,18 +76,7 @@ export class Condition {
       }
     }
 
-    return {
-      sql: sql,
-      parameterIndex: parameterIndex
-    }
-  }
-
-  mysql(): string {
-    return this.sql('mysql').sql
-  }
-
-  postgres(): string {
-    return this.sql('postgres').sql
+    return sql
   }
 
   values(): any[] {
@@ -143,7 +93,7 @@ export class Condition {
           values.push(piece.value)
         }
       }
-      else if (piece instanceof Condition) {
+      else if (piece instanceof SqlPiece) {
         values.push(...piece.values())
       }
       else if (piece instanceof Query) {

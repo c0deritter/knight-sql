@@ -1,6 +1,6 @@
 import { expect } from 'chai'
 import 'mocha'
-import sql, { Condition, value } from '../src'
+import sql, { Brackets, Comparison, Condition, ParameterTokens, value } from '../src'
 
 describe('Condition', function () {
   describe('mysql', function () {
@@ -58,94 +58,28 @@ describe('Condition', function () {
       expect(condition.values()).to.deep.equal([0,1,2,3,4])
     })
 
-    it('should render replace an = operator with an IS operator if the following piece is null', function() {
-      let condition = new Condition('=', [1,2,3])
-      expect(condition.mysql()).to.equal('IN (1, 2, 3)')
-      expect(condition.values()).to.deep.equal([])
-    })
-
-    it('should render replace an ? operator with an IS operator if the following piece is a value which is null', function() {
-      let condition = new Condition(value(0), '=', value([1,2,3]), value(4))
-      expect(condition.mysql()).to.equal('? IN (?, ?, ?) ?')
-      expect(condition.values()).to.deep.equal([0,1,2,3,4])
-    })
-
-    it('should render replace a <> operator with an IS NOT operator if the following piece is null', function() {
-      let condition = new Condition('<>', [1,2,3])
-      expect(condition.mysql()).to.equal('NOT IN (1, 2, 3)')
-      expect(condition.values()).to.deep.equal([])
-    })
-
-    it('should render replace an <> operator with an IS NOT operator if the following piece is a value which is null', function() {
-      let condition = new Condition(value(0), '<>', value([1,2,3]), value(4))
-      expect(condition.mysql()).to.equal('? NOT IN (?, ?, ?) ?')
-      expect(condition.values()).to.deep.equal([0,1,2,3,4])
-    })
-
-    it('should render replace a != operator with an IS NOT operator if the following piece is null', function() {
-      let condition = new Condition('!=', [1,2,3])
-      expect(condition.mysql()).to.equal('NOT IN (1, 2, 3)')
-      expect(condition.values()).to.deep.equal([])
-    })
-
-    it('should render replace an != operator with an IS NOT operator if the following piece is a value which is null', function() {
-      let condition = new Condition(value(0), '!=', value([1,2,3]), value(4))
-      expect(condition.mysql()).to.equal('? NOT IN (?, ?, ?) ?')
-      expect(condition.values()).to.deep.equal([0,1,2,3,4])
-    })
-
-    it('should render null to an SQL NULL string', function() {
-      let condition = new Condition(null)
-      expect(condition.mysql()).to.equal('NULL')
-      expect(condition.values()).to.deep.equal([])
-    })
-
     it('should render null to an SQL NULL string', function() {
       let condition = new Condition(value(0), value(null), value(1))
       expect(condition.mysql()).to.equal('? NULL ?')
       expect(condition.values()).to.deep.equal([0,1])
     })
 
-    it('should render replace an equals operator with an IS operator if the following piece is null', function() {
-      let condition = new Condition('=', null)
-      expect(condition.mysql()).to.equal('IS NULL')
-      expect(condition.values()).to.deep.equal([])
-    })
-
-    it('should render replace an equals operator with an IS operator if the following piece is a value which is null', function() {
-      let condition = new Condition('=', value(null))
-      expect(condition.mysql()).to.equal('IS NULL')
-      expect(condition.values()).to.deep.equal([])
-    })
-
-    it('should render replace a <> operator with an IS NOT operator if the following piece is null', function() {
-      let condition = new Condition('<>', null)
-      expect(condition.mysql()).to.equal('IS NOT NULL')
-      expect(condition.values()).to.deep.equal([])
-    })
-
-    it('should render replace an <> operator with an IS NOT operator if the following piece is a value which is null', function() {
-      let condition = new Condition(value(0), '<>', value(null))
-      expect(condition.mysql()).to.equal('? IS NOT NULL')
-      expect(condition.values()).to.deep.equal([0])
-    })
-
-    it('should render replace a != operator with an IS NOT operator if the following piece is null', function() {
-      let condition = new Condition('!=', null)
-      expect(condition.mysql()).to.equal('IS NOT NULL')
-      expect(condition.values()).to.deep.equal([])
-    })
-
-    it('should render replace an != operator with an IS NOT operator if the following piece is a value which is null', function() {
-      let condition = new Condition(value(0), '!=', value(null))
-      expect(condition.mysql()).to.equal('? IS NOT NULL')
-      expect(condition.values()).to.deep.equal([0])
-    })
-
     it('should render a condition', function() {
       let condition = new Condition(new Condition('column'))
       expect(condition.mysql()).to.equal('column')
       expect(condition.values()).to.deep.equal([])
+    })
+
+    it('should render a comparison', function() {
+      let condition = new Condition(new Comparison('column', 1))
+      expect(condition.mysql()).to.equal('column = ?')
+      expect(condition.values()).to.deep.equal([1])
+    })
+
+    it('should render brackets', function() {
+      let condition = new Condition(new Brackets(new Comparison('column', 1)))
+      expect(condition.mysql()).to.equal('(column = ?)')
+      expect(condition.values()).to.deep.equal([1])
     })
 
     it('should render a condition with values', function() {
@@ -223,86 +157,9 @@ describe('Condition', function () {
       expect(condition.values()).to.deep.equal([0,1,2,3,4])
     })
 
-    it('should render replace an = operator with an IS operator if the following piece is null', function() {
-      let condition = new Condition('=', [1,2,3])
-      expect(condition.postgres()).to.equal('IN (1, 2, 3)')
-      expect(condition.values()).to.deep.equal([])
-    })
-
-    it('should render replace an ? operator with an IS operator if the following piece is a value which is null', function() {
-      let condition = new Condition(value(0), '=', value([1,2,3]), value(4))
-      expect(condition.postgres()).to.equal('$1 IN ($2, $3, $4) $5')
-      expect(condition.values()).to.deep.equal([0,1,2,3,4])
-    })
-
-    it('should render replace a <> operator with an IS NOT operator if the following piece is null', function() {
-      let condition = new Condition('<>', [1,2,3])
-      expect(condition.postgres()).to.equal('NOT IN (1, 2, 3)')
-      expect(condition.values()).to.deep.equal([])
-    })
-
-    it('should render replace an <> operator with an IS NOT operator if the following piece is a value which is null', function() {
-      let condition = new Condition(value(0), '<>', value([1,2,3]), value(4))
-      expect(condition.postgres()).to.equal('$1 NOT IN ($2, $3, $4) $5')
-      expect(condition.values()).to.deep.equal([0,1,2,3,4])
-    })
-
-    it('should render replace a != operator with an IS NOT operator if the following piece is null', function() {
-      let condition = new Condition('!=', [1,2,3])
-      expect(condition.postgres()).to.equal('NOT IN (1, 2, 3)')
-      expect(condition.values()).to.deep.equal([])
-    })
-
-    it('should render replace an != operator with an IS NOT operator if the following piece is a value which is null', function() {
-      let condition = new Condition(value(0), '!=', value([1,2,3]), value(4))
-      expect(condition.postgres()).to.equal('$1 NOT IN ($2, $3, $4) $5')
-      expect(condition.values()).to.deep.equal([0,1,2,3,4])
-    })
-
-    it('should render null to an SQL NULL string', function() {
-      let condition = new Condition(null)
-      expect(condition.postgres()).to.equal('NULL')
-      expect(condition.values()).to.deep.equal([])
-    })
-
     it('should render null to an SQL NULL string', function() {
       let condition = new Condition(value(0), value(null), value(1))
       expect(condition.postgres()).to.equal('$1 NULL $2')
-      expect(condition.values()).to.deep.equal([0,1])
-    })
-    it('should render replace an = operator with an IS operator if the following piece is null', function() {
-      let condition = new Condition('=', null)
-      expect(condition.postgres()).to.equal('IS NULL')
-      expect(condition.values()).to.deep.equal([])
-    })
-
-    it('should render replace an ? operator with an IS operator if the following piece is a value which is null', function() {
-      let condition = new Condition(value(0), '=', value(null), value(1))
-      expect(condition.postgres()).to.equal('$1 IS NULL $2')
-      expect(condition.values()).to.deep.equal([0,1])
-    })
-
-    it('should render replace a <> operator with an IS NOT operator if the following piece is null', function() {
-      let condition = new Condition('<>', null)
-      expect(condition.postgres()).to.equal('IS NOT NULL')
-      expect(condition.values()).to.deep.equal([])
-    })
-
-    it('should render replace an <> operator with an IS NOT operator if the following piece is a value which is null', function() {
-      let condition = new Condition(value(0), '<>', value(null), value(1))
-      expect(condition.postgres()).to.equal('$1 IS NOT NULL $2')
-      expect(condition.values()).to.deep.equal([0,1])
-    })
-
-    it('should render replace a != operator with an IS NOT operator if the following piece is null', function() {
-      let condition = new Condition('!=', null)
-      expect(condition.postgres()).to.equal('IS NOT NULL')
-      expect(condition.values()).to.deep.equal([])
-    })
-
-    it('should render replace an != operator with an IS NOT operator if the following piece is a value which is null', function() {
-      let condition = new Condition(value(0), '!=', value(null), value(1))
-      expect(condition.postgres()).to.equal('$1 IS NOT NULL $2')
       expect(condition.values()).to.deep.equal([0,1])
     })
 
@@ -310,6 +167,18 @@ describe('Condition', function () {
       let condition = new Condition(new Condition('column'))
       expect(condition.postgres()).to.equal('column')
       expect(condition.values()).to.deep.equal([])
+    })
+
+    it('should render a comparison', function() {
+      let condition = new Condition(new Comparison('column', 1))
+      expect(condition.sql('postgres', new ParameterTokens(2))).to.equal('column = $2')
+      expect(condition.values()).to.deep.equal([1])
+    })
+
+    it('should render brackets', function() {
+      let condition = new Condition(new Brackets(new Comparison('column', 1)))
+      expect(condition.sql('postgres', new ParameterTokens(2))).to.equal('(column = $2)')
+      expect(condition.values()).to.deep.equal([1])
     })
 
     it('should render a condition with values', function() {

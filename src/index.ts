@@ -1,5 +1,3 @@
-// https://ronsavage.github.io/SQL/sql-92.bnf.html
-
 import { Query } from './Query'
 
 export default class {
@@ -30,8 +28,12 @@ export default class {
   }
 }
 
+export * from './Brackets'
+export * from './Comparison'
 export * from './Condition'
 export * from './From'
 export * from './Join'
+export * from './ParameterTokens'
 export * from './Query'
+export * from './SqlPiece'
 export * from './Value'
