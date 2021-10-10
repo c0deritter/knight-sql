@@ -169,5 +169,25 @@ describe('Query', function() {
         expect(query.values()).to.deep.equal(['a','b'])
       })
     })
+
+    describe('JOIN', function() {
+      it('should create a JOIN statement', function() {
+        let query = sql.select('*').from('table')
+          .join('LEFT', 'other_table1', 'other_table1', 'id1 = other_table1.id')
+          .join('RIGHT', 'other_table2', 'other_table2', 'id2 = other_table2.id')
+
+        expect(query.postgres()).to.equal('SELECT * FROM table LEFT JOIN other_table1 other_table1 ON id1 = other_table1.id RIGHT JOIN other_table2 other_table2 ON id2 = other_table2.id')
+        expect(query.values()).to.deep.equal([])
+      })
+
+      it('should add the same join only once', function() {
+        let query = sql.select('*').from('table')
+          .join('LEFT', 'other_table1', 'other_table1', 'id1 = other_table1.id')
+          .join('LEFT', 'other_table1', 'other_table1', 'id1 = other_table1.id')
+
+        expect(query.postgres()).to.equal('SELECT * FROM table LEFT JOIN other_table1 other_table1 ON id1 = other_table1.id')
+        expect(query.values()).to.deep.equal([])
+      })
+    })
   })
 })

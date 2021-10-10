@@ -69,7 +69,23 @@ export class Query extends SqlPiece {
   join(table: string, alias: string, on: string): Query
 
   join(typeOrTable: string, tableOrOnOrAlias: string, onOrAlias?: string, on?: string): Query {
-    this._join.push(new Join(typeOrTable, tableOrOnOrAlias, onOrAlias as any, on as any))
+    let newJoin = new Join(typeOrTable, tableOrOnOrAlias, onOrAlias as any, on as any)
+    let joinAlreadyExists = false
+
+    for (let join of this._join) {
+      if (join.type === newJoin.type &&
+          join.table === newJoin.table &&
+          join.alias === newJoin.alias &&
+          join.on === newJoin.on) {
+        joinAlreadyExists = true
+        break
+      }
+    }
+
+    if (! joinAlreadyExists) {
+      this._join.push(newJoin)
+    }
+
     return this
   }
 
