@@ -9,7 +9,7 @@ export abstract class SqlPiece {
     return this.sql('mysql')
   }
 
-  postgres(): string {
-    return this.sql('postgres')
+  postgres(parameterTokens?: ParameterTokens): string {
+    return this.sql('postgres', parameterTokens)
   }
 }
