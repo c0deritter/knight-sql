@@ -6,24 +6,31 @@ import { SqlPiece } from './SqlPiece'
 
 export class Query extends SqlPiece {
 
-  _selects: string[] = []
+  _select: string[] = []
   _insertInto?: string
   _valuesToSet: [string, any][] = []
   _update?: string
   _delete?: string
-  _froms: From[] = []
-  _joins: Join[] = []
-  _usings: string[] = []
-  _wheres: Condition[] = []
-  _groupBys: string[] = []
-  _havings: Condition[] = []
-  _orderBys: string[] = []
+  _from: From[] = []
+  _join: Join[] = []
+  _using: string[] = []
+  _where: Condition = new Condition
+  _groupBy: string[] = []
+  _having: Condition = new Condition
+  _orderBy: string[] = []
   _limit?: number
   _offset?: number
-  _returnings: string[] = []
+  _returning: string[] = []
+
+  constructor() {
+    super()
+
+    this._where.removeOuterLogicalOperators = true
+    this._having.removeOuterLogicalOperators = true
+  }
 
   select(...selects: string[]): Query {
-    this._selects.push(...selects)
+    this._select.push(...selects)
     return this
   }
 
@@ -44,7 +51,7 @@ export class Query extends SqlPiece {
 
   deleteFrom(expressionOrTable: string, alias?: string): Query {
     this._delete = ''
-    this._froms.push(new From(expressionOrTable, alias))
+    this._from.push(new From(expressionOrTable, alias))
     return this
   }
 
@@ -52,7 +59,7 @@ export class Query extends SqlPiece {
   from(table: string, alias?: string): Query
 
   from(expressionOrTable: string, alias?: string): Query {
-    this._froms.push(new From(expressionOrTable, alias))
+    this._from.push(new From(expressionOrTable, alias))
     return this
   }
 
@@ -62,7 +69,7 @@ export class Query extends SqlPiece {
   join(table: string, alias: string, on: string): Query
 
   join(typeOrTable: string, tableOrOnOrAlias: string, onOrAlias?: string, on?: string): Query {
-    this._joins.push(new Join(typeOrTable, tableOrOnOrAlias, onOrAlias as any, on as any))
+    this._join.push(new Join(typeOrTable, tableOrOnOrAlias, onOrAlias as any, on as any))
     return this
   }
 
@@ -71,7 +78,7 @@ export class Query extends SqlPiece {
     * Supported in PostgreSQL 9.1+ (https://stackoverflow.com/questions/11753904/postgresql-delete-with-inner-join)
    */
   using(...usings: string[]): Query {
-    this._usings.push(...usings)
+    this._using.push(...usings)
     return this
   }
 
@@ -86,52 +93,52 @@ export class Query extends SqlPiece {
   }
 
   where(...conditions: any[]): Query {
-    this._wheres.push(new Condition(...conditions))
+    this._where.pieces.push(...conditions)
     return this
   }
 
   and(...conditions: any[]): Query {
-    this._wheres.push(new Condition('AND', ...conditions))
+    this._where.pieces.push('AND', ...conditions)
     return this
   }
 
   or(...conditions: any[]): Query {
-    this._wheres.push(new Condition('OR', ...conditions))
+    this._where.pieces.push('OR', ...conditions)
     return this
   }
 
   xor(...conditions: any[]): Query {
-    this._wheres.push(new Condition('XOR', ...conditions))
+    this._where.pieces.push('XOR', ...conditions)
     return this
   }
 
   groupBy(...columns: string[]): Query {
-    this._groupBys.push(...columns)
+    this._groupBy.push(...columns)
     return this
   }
 
   having(...conditions: any[]): Query {
-    this._havings.push(new Condition(...conditions))
+    this._having.pieces.push(...conditions)
     return this
   }
 
   andHaving(...conditions: any[]): Query {
-    this._havings.push(new Condition('AND', ...conditions))
+    this._having.pieces.push('AND', ...conditions)
     return this
   }
 
   orHaving(...conditions: any[]): Query {
-    this._havings.push(new Condition('OR', ...conditions))
+    this._having.pieces.push('OR', ...conditions)
     return this
   }
 
   xorHaving(...conditions: any[]): Query {
-    this._havings.push(new Condition('XOR', ...conditions))
+    this._having.pieces.push('XOR', ...conditions)
     return this
   }
 
   orderBy(...orderBys: string[]): Query {
-    this._orderBys.push(...orderBys)
+    this._orderBy.push(...orderBys)
     return this
   }
 
@@ -146,15 +153,15 @@ export class Query extends SqlPiece {
   }
 
   returning(returning: string): Query {
-    this._returnings.push(returning)
+    this._returning.push(returning)
     return this
   }
 
   sql(db: string, parameterTokens: ParameterTokens = new ParameterTokens): string {
     let sql = ''
 
-    if (this._selects.length > 0) {
-      sql += 'SELECT ' + this._selects.join(', ')
+    if (this._select.length > 0) {
+      sql += 'SELECT ' + this._select.join(', ')
     }
 
     if (this._insertInto != undefined) {
@@ -169,12 +176,12 @@ export class Query extends SqlPiece {
       sql += 'DELETE' + (this._delete.length > 0 ? ' ' + this._delete : '')
     }
 
-    if (this._froms.length > 0) {
+    if (this._from.length > 0) {
       sql += ' FROM '
       let firstFrom = true
 
-      for (let from of this._froms) {
-        if (! firstFrom) {
+      for (let from of this._from) {
+        if (!firstFrom) {
           sql += ', '
         }
 
@@ -183,11 +190,11 @@ export class Query extends SqlPiece {
       }
     }
 
-    if (this._usings.length > 0) {
-      sql += ' USING ' + this._usings.join(', ')
+    if (this._using.length > 0) {
+      sql += ' USING ' + this._using.join(', ')
     }
 
-    for (let join of this._joins) {
+    for (let join of this._join) {
       sql += ' ' + join.sql()
     }
 
@@ -196,10 +203,10 @@ export class Query extends SqlPiece {
       let firstValue = true
 
       for (let value of this._valuesToSet) {
-        if (! firstValue) {
+        if (!firstValue) {
           sql += ', '
         }
-        
+
         sql += value[0]
         firstValue = false
       }
@@ -208,10 +215,10 @@ export class Query extends SqlPiece {
 
       firstValue = true
       for (let value of this._valuesToSet) {
-        if (! firstValue) {
+        if (!firstValue) {
           sql += ', '
         }
-        
+
         sql += parameterTokens.create(db)
         firstValue = false
       }
@@ -227,54 +234,46 @@ export class Query extends SqlPiece {
       let firstValue = true
 
       for (let value of this._valuesToSet) {
-        if (! firstValue) {
+        if (!firstValue) {
           sql += ', '
         }
-        
+
         sql += value[0] + ' = ' + parameterTokens.create(db)
         firstValue = false
       }
     }
 
-    if (this._wheres.length > 0) {
-      sql += ' WHERE'
-
-      for (let condition of this._wheres) {
-        sql += ' ' + condition.sql(db, parameterTokens)
-      }
+    if (this._where.pieces.length > 0) {
+      sql += ' WHERE ' + this._where.sql(db, parameterTokens)
     }
 
-    if (this._groupBys.length > 0) {
-      let groupBys = this._groupBys.join(', ')
+    if (this._groupBy.length > 0) {
+      let groupBys = this._groupBy.join(', ')
       sql += ' GROUP BY ' + groupBys
     }
 
-    if (this._havings.length > 0) {
-      sql += ' HAVING'
-
-      for (let condition of this._havings) {
-        sql += ' ' + condition.sql(db, parameterTokens)
-      }
+    if (this._having.pieces.length > 0) {
+      sql += ' HAVING ' + this._having.sql(db, parameterTokens)
     }
 
-    if (this._orderBys.length > 0) {
-      sql += ' ORDER BY ' + this._orderBys.join(', ')
+    if (this._orderBy.length > 0) {
+      sql += ' ORDER BY ' + this._orderBy.join(', ')
     }
 
     if (this._limit != undefined) {
       sql += ' LIMIT ' + parameterTokens.create(db)
     }
-    
+
     if (this._offset != undefined) {
       sql += ' OFFSET ' + parameterTokens.create(db)
     }
 
-    if (this._returnings.length > 0) {
+    if (this._returning.length > 0) {
       sql += ' RETURNING '
       let firstReturning = true
 
-      for (let returning of this._returnings) {
-        if (! firstReturning) {
+      for (let returning of this._returning) {
+        if (!firstReturning) {
           sql += ', '
         }
 
@@ -282,7 +281,7 @@ export class Query extends SqlPiece {
         firstReturning = false
       }
     }
-    
+
     return sql
   }
 
@@ -293,13 +292,8 @@ export class Query extends SqlPiece {
       values.push(value[1])
     }
 
-    for (let condition of this._wheres) {
-      values.push(...condition.values())
-    }
-
-    for (let condition of this._havings) {
-      values.push(...condition.values())
-    }
+    values.push(...this._where.values())
+    values.push(...this._having.values())
 
     if (this._limit != undefined) {
       values.push(this._limit)

@@ -100,6 +100,35 @@ describe('Condition', function () {
       expect(condition.mysql()).to.equal('? ? ?')
       expect(condition.values()).to.deep.equal([0,date,1])
     })
+
+    it('should remove outer logical operators', function() {
+      let c1 = new Condition('and', 'and')
+      let c2 = new Condition('or', 'or')
+      let c3 = new Condition('xor', 'xor')
+      let c4 = new Condition('AND', 'AND')
+      let c5 = new Condition('OR', 'OR')
+      let c6 = new Condition('XOR', 'XOR')
+      let c7 = new Condition('AND', 'column =', value(1), 'AND')
+      let c8 = new Condition('AND', 'column1 =', value(1), 'OR', 'column2 =', value('a'), 'AND')
+
+      c1.removeOuterLogicalOperators = true
+      c2.removeOuterLogicalOperators = true
+      c3.removeOuterLogicalOperators = true
+      c4.removeOuterLogicalOperators = true
+      c5.removeOuterLogicalOperators = true
+      c6.removeOuterLogicalOperators = true
+      c7.removeOuterLogicalOperators = true
+      c8.removeOuterLogicalOperators = true
+
+      expect(c1.mysql()).to.equal('')
+      expect(c2.mysql()).to.equal('')
+      expect(c3.mysql()).to.equal('')
+      expect(c4.mysql()).to.equal('')
+      expect(c5.mysql()).to.equal('')
+      expect(c6.mysql()).to.equal('')
+      expect(c7.mysql()).to.equal('column = ?')
+      expect(c8.mysql()).to.equal('column1 = ? OR column2 = ?')
+    })
   })
 
   describe('postgres', function () {
@@ -198,6 +227,35 @@ describe('Condition', function () {
       let condition = new Condition(value(0), date, value(1))
       expect(condition.postgres()).to.equal('$1 $2 $3')
       expect(condition.values()).to.deep.equal([0,date,1])
+    })
+
+    it('should remove outer logical operators', function() {
+      let c1 = new Condition('and', 'and')
+      let c2 = new Condition('or', 'or')
+      let c3 = new Condition('xor', 'xor')
+      let c4 = new Condition('AND', 'AND')
+      let c5 = new Condition('OR', 'OR')
+      let c6 = new Condition('XOR', 'XOR')
+      let c7 = new Condition('AND', 'column =', value(1), 'AND')
+      let c8 = new Condition('AND', 'column1 =', value(1), 'OR', 'column2 =', value('a'), 'AND')
+
+      c1.removeOuterLogicalOperators = true
+      c2.removeOuterLogicalOperators = true
+      c3.removeOuterLogicalOperators = true
+      c4.removeOuterLogicalOperators = true
+      c5.removeOuterLogicalOperators = true
+      c6.removeOuterLogicalOperators = true
+      c7.removeOuterLogicalOperators = true
+      c8.removeOuterLogicalOperators = true
+
+      expect(c1.postgres(new ParameterTokens(2))).to.equal('')
+      expect(c2.postgres(new ParameterTokens(2))).to.equal('')
+      expect(c3.postgres(new ParameterTokens(2))).to.equal('')
+      expect(c4.postgres(new ParameterTokens(2))).to.equal('')
+      expect(c5.postgres(new ParameterTokens(2))).to.equal('')
+      expect(c6.postgres(new ParameterTokens(2))).to.equal('')
+      expect(c7.postgres(new ParameterTokens(2))).to.equal('column = $2')
+      expect(c8.postgres(new ParameterTokens(2))).to.equal('column1 = $2 OR column2 = $3')
     })
   })
 })

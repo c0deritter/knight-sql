@@ -33,7 +33,7 @@ describe('Comparison', function () {
     })
   })
 
-  describe.only('comparison', function() {
+  describe('comparison', function() {
     it('should accept a column and a value', function() {
       let cmp = comparison('column', 1)
       expect(cmp.column).to.equal('column')

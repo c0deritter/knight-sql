@@ -6,6 +6,7 @@ import { Value } from './Value'
 export class Condition extends SqlPiece {
 
   pieces: any[] = []
+  removeOuterLogicalOperators: boolean = false
 
   constructor(...pieces: any[]) {
     super()
@@ -24,9 +25,26 @@ export class Condition extends SqlPiece {
         continue
       }
       else if (typeof piece == 'string') {
+        if (i == 0 && this.removeOuterLogicalOperators && piece.length >= 2 && piece.length <= 3) {
+          let upperCase = piece.toUpperCase()
+
+          if (upperCase == 'AND' || upperCase == 'OR' || upperCase == 'XOR') {
+            continue
+          }
+        }
+
+        if (i == this.pieces.length - 1 && this.removeOuterLogicalOperators && piece.length >= 2 && piece.length <= 3) {
+          let upperCase = piece.toUpperCase()
+
+          if (upperCase == 'AND' || upperCase == 'OR' || upperCase == 'XOR') {
+            continue
+          }
+        }
+        
         if (piece.length > 0 && piece[piece.length - 1] == '.') {
           withoutSpaceIndex = i + 1
         }
+
         if (withoutSpaceIndex == i) {
           sql += piece
         }
@@ -115,4 +133,8 @@ export class Condition extends SqlPiece {
 
     return values
   }
+}
+
+export function condition(...pieces: any[]): Condition {
+  return new Condition(...pieces)
 }

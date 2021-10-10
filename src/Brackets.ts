@@ -8,6 +8,7 @@ export class Brackets extends SqlPiece {
 
   constructor(...pieces: any[]) {
     super()
+    this.condition.removeOuterLogicalOperators = true
     this.condition.pieces = pieces
   }
 
