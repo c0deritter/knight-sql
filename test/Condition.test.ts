@@ -1,6 +1,6 @@
 import { expect } from 'chai'
 import 'mocha'
-import sql, { Brackets, Comparison, Condition, ParameterTokens, value } from '../src'
+import sql, { Comparison, Condition, ParameterTokens, value } from '../src'
 
 describe('Condition', function () {
   describe('mysql', function () {
@@ -76,12 +76,6 @@ describe('Condition', function () {
       expect(condition.values()).to.deep.equal([1])
     })
 
-    it('should render brackets', function() {
-      let condition = new Condition(new Brackets(new Comparison('column', 1)))
-      expect(condition.mysql()).to.equal('(column = ?)')
-      expect(condition.values()).to.deep.equal([1])
-    })
-
     it('should render a condition with values', function() {
       let condition = new Condition(value(1), new Condition(value(2)), value(3))
       expect(condition.mysql()).to.equal('? ? ?')
@@ -128,6 +122,26 @@ describe('Condition', function () {
       expect(c6.mysql()).to.equal('')
       expect(c7.mysql()).to.equal('column = ?')
       expect(c8.mysql()).to.equal('column1 = ? OR column2 = ?')
+    })
+
+    it('should render brackets', function() {
+      let condition = new Condition('column =', value(1))
+      condition.surroundWithBrackets = true
+      expect(condition.mysql()).to.equal('(column = ?)')
+      expect(condition.values()).to.deep.equal([1])
+    })
+
+    it('should not render brackets if the condition is empty', function() {
+      let c1 = new Condition
+      c1.surroundWithBrackets = true
+      expect(c1.mysql()).to.equal('')
+      expect(c1.values()).to.deep.equal([])
+
+      let c2 = new Condition('AND', 'OR')
+      c2.removeOuterLogicalOperators = true
+      c2.surroundWithBrackets = true
+      expect(c2.mysql()).to.equal('')
+      expect(c2.values()).to.deep.equal([])
     })
   })
 
@@ -204,12 +218,6 @@ describe('Condition', function () {
       expect(condition.values()).to.deep.equal([1])
     })
 
-    it('should render brackets', function() {
-      let condition = new Condition(new Brackets(new Comparison('column', 1)))
-      expect(condition.sql('postgres', new ParameterTokens(2))).to.equal('(column = $2)')
-      expect(condition.values()).to.deep.equal([1])
-    })
-
     it('should render a condition with values', function() {
       let condition = new Condition(value(1), new Condition(value(2)), value(3))
       expect(condition.postgres()).to.equal('$1 $2 $3')
@@ -256,6 +264,26 @@ describe('Condition', function () {
       expect(c6.postgres(new ParameterTokens(2))).to.equal('')
       expect(c7.postgres(new ParameterTokens(2))).to.equal('column = $2')
       expect(c8.postgres(new ParameterTokens(2))).to.equal('column1 = $2 OR column2 = $3')
+    })
+
+    it('should render brackets', function() {
+      let condition = new Condition('column =', value(1))
+      condition.surroundWithBrackets = true
+      expect(condition.postgres(new ParameterTokens(2))).to.equal('(column = $2)')
+      expect(condition.values()).to.deep.equal([1])
+    })
+
+    it('should not render brackets if the condition is empty', function() {
+      let c1 = new Condition
+      c1.surroundWithBrackets = true
+      expect(c1.postgres()).to.equal('')
+      expect(c1.values()).to.deep.equal([])
+
+      let c2 = new Condition('AND', 'OR')
+      c2.removeOuterLogicalOperators = true
+      c2.surroundWithBrackets = true
+      expect(c2.postgres()).to.equal('')
+      expect(c2.values()).to.deep.equal([])
     })
   })
 })

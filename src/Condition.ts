@@ -7,6 +7,7 @@ export class Condition extends SqlPiece {
 
   pieces: any[] = []
   removeOuterLogicalOperators: boolean = false
+  surroundWithBrackets: boolean = false
 
   constructor(...pieces: any[]) {
     super()
@@ -17,6 +18,7 @@ export class Condition extends SqlPiece {
     let sql = ''
     let space = ''
     let withoutSpaceIndex = 0
+    let openingBracketAdded = false
 
     for (let i = 0; i < this.pieces.length; i++) {
       let piece = this.pieces[i]
@@ -24,23 +26,29 @@ export class Condition extends SqlPiece {
       if (piece === undefined || piece === '') {
         continue
       }
-      else if (typeof piece == 'string') {
-        if (i == 0 && this.removeOuterLogicalOperators && piece.length >= 2 && piece.length <= 3) {
-          let upperCase = piece.toUpperCase()
 
-          if (upperCase == 'AND' || upperCase == 'OR' || upperCase == 'XOR') {
-            continue
-          }
+      if (i == 0 && this.removeOuterLogicalOperators && typeof piece == 'string' && piece.length >= 2 && piece.length <= 3) {
+        let upperCase = piece.toUpperCase()
+
+        if (upperCase == 'AND' || upperCase == 'OR' || upperCase == 'XOR') {
+          continue
         }
+      }
 
-        if (i == this.pieces.length - 1 && this.removeOuterLogicalOperators && piece.length >= 2 && piece.length <= 3) {
-          let upperCase = piece.toUpperCase()
+      if (i == this.pieces.length - 1 && this.removeOuterLogicalOperators && typeof piece == 'string' && piece.length >= 2 && piece.length <= 3) {
+        let upperCase = piece.toUpperCase()
 
-          if (upperCase == 'AND' || upperCase == 'OR' || upperCase == 'XOR') {
-            continue
-          }
+        if (upperCase == 'AND' || upperCase == 'OR' || upperCase == 'XOR') {
+          continue
         }
-        
+      }
+
+      if (this.surroundWithBrackets && ! openingBracketAdded) {
+        sql += '('
+        openingBracketAdded = true
+      }
+
+      if (typeof piece == 'string') {
         if (piece.length > 0 && piece[piece.length - 1] == '.') {
           withoutSpaceIndex = i + 1
         }
@@ -91,6 +99,10 @@ export class Condition extends SqlPiece {
       if (space.length == 0) {
         space = ' '
       }
+    }
+
+    if (openingBracketAdded) {
+      sql += ')'
     }
 
     return sql

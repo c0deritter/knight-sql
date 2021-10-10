@@ -28,7 +28,6 @@ export default class {
   }
 }
 
-export * from './Brackets'
 export * from './Comparison'
 export * from './Condition'
 export * from './From'
