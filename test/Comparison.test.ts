@@ -1,6 +1,6 @@
 import { expect } from 'chai'
 import 'mocha'
-import { Comparison, ParameterTokens } from '../src'
+import { comparison, Comparison, ParameterTokens } from '../src'
 
 describe('Comparison', function () {
   describe('constructor', function() {
@@ -30,6 +30,22 @@ describe('Comparison', function () {
       expect(comparison.column).to.equal('column')
       expect(comparison.operator).to.equal('<>')
       expect(comparison.value).to.deep.equal([1,2,3])
+    })
+  })
+
+  describe.only('comparison', function() {
+    it('should accept a column and a value', function() {
+      let cmp = comparison('column', 1)
+      expect(cmp.column).to.equal('column')
+      expect(cmp.operator).to.equal('=')
+      expect(cmp.value).to.equal(1)
+    })
+
+    it('should accept a column, an operator and a value', function() {
+      let cmp = comparison('column', '<>', 1)
+      expect(cmp.column).to.equal('column')
+      expect(cmp.operator).to.equal('<>')
+      expect(cmp.value).to.equal(1)
     })
   })
 

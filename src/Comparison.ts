@@ -105,5 +105,9 @@ export function comparison(column: string, value: any): Comparison
 export function comparison(column: string, operator: string, value: any): Comparison
 
 export function comparison(...args: any[]): Comparison {
+  if (args.length == 2) {
+    return new Comparison(args[0] as any, args[1] as any)
+  }
+
   return new Comparison(args[0] as any, args[1] as any, args[2] as any)
 }
