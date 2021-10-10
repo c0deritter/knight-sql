@@ -14,6 +14,26 @@ export class Condition extends SqlPiece {
     this.pieces = pieces
   }
 
+  push(...pieces: any[]): Condition {
+    this.pieces.push(...pieces)
+    return this
+  }
+
+  and(...pieces: any[]): Condition {
+    this.pieces.push('AND', ...pieces)
+    return this
+  }
+
+  or(...pieces: any[]): Condition {
+    this.pieces.push('OR', ...pieces)
+    return this
+  }
+
+  xor(...pieces: any[]): Condition {
+    this.pieces.push('XOR', ...pieces)
+    return this
+  }
+
   sql(db: string, parameterTokens: ParameterTokens = new ParameterTokens): string {
     let sql = ''
     let space = ''
