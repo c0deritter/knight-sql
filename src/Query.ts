@@ -1,89 +1,150 @@
-import { ParameterTokens } from '.'
 import { Condition } from './Condition'
+import { CustomSqlPiece } from './CustomSqlPiece'
 import { From } from './From'
 import { Join } from './Join'
-import { SqlPiece } from './SqlPiece'
+import { ParameterTokens } from './ParameterTokens'
+import { SqlPieces } from './SqlPieces'
 
-export class Query extends SqlPiece {
+export class Query extends CustomSqlPiece {
 
-  _select: string[] = []
-  _insertInto?: string
-  _valuesToSet: [string, any][] = []
-  _update?: string
-  _delete?: string
-  _from: From[] = []
-  _join: Join[] = []
-  _using: string[] = []
-  _where: Condition = new Condition
-  _groupBy: string[] = []
-  _having: Condition = new Condition
-  _orderBy: string[] = []
+  _select?: SqlPieces
+  _insertInto?: SqlPieces
+  _valuesToSet?: [string, any][]
+  _update?: SqlPieces
+  _delete?: SqlPieces
+  _from?: SqlPieces
+  _join?: SqlPieces
+  _using?: SqlPieces
+  _where?: Condition
+  _groupBy?: SqlPieces
+  _having?: Condition
+  _orderBy?: SqlPieces
   _limit?: number
   _offset?: number
-  _returning: string[] = []
+  _returning?: SqlPieces
 
   constructor() {
     super()
-
-    this._where.removeOuterLogicalOperators = true
-    this._having.removeOuterLogicalOperators = true
   }
 
-  select(...selects: string[]): Query {
+  select(...selects: (string|CustomSqlPiece)[]): Query {
+    if (this._select == undefined) {
+      this._select = new SqlPieces(', ')
+    }
+
     this._select.push(...selects)
     return this
   }
 
-  insertInto(insertInto?: string): Query {
-    this._insertInto = insertInto
+  insertInto(insertInto: string|CustomSqlPiece): Query {
+    if (this._insertInto == undefined) {
+      this._insertInto = new SqlPieces
+    }
+
+    this._insertInto.push(insertInto)
     return this
   }
 
-  update(update: string): Query {
-    this._update = update
+  update(update: string|CustomSqlPiece): Query {
+    if (this._update == undefined) {
+      this._update = new SqlPieces
+    }
+
+    this._update.push(update)
     return this
   }
 
-  delete_(delete_?: string): Query {
-    this._delete = delete_ == undefined ? '' : delete_
+  delete_(delete_?: string|CustomSqlPiece): Query {
+    if (this._delete == undefined) {
+      this._delete = new SqlPieces
+    }
+
+    if (delete_ != undefined) {
+      this._delete.push(delete_)
+    }
+
     return this
   }
 
-  deleteFrom(expressionOrTable: string, alias?: string): Query {
-    this._delete = ''
-    this._from.push(new From(expressionOrTable, alias))
+  deleteFrom(deleteFrom: string|CustomSqlPiece): Query
+  deleteFrom(table: string, alias: string): Query
+
+  deleteFrom(...args: (string|CustomSqlPiece)[]): Query {
+    if (this._delete == undefined) {
+      this._delete = new SqlPieces
+    }
+
+    if (this._from == undefined) {
+      this._from = new SqlPieces
+    }
+
+    if (args.length == 1) {
+      this._from.push(args[0])
+    }
+    else if (args.length >= 2) {
+      this._from.push(new From(args[0] as string, args[1] as string))
+    }
+
     return this
   }
 
-  from(expression: string): Query
-  from(table: string, alias?: string): Query
+  from(from: string|CustomSqlPiece): Query
+  from(table: string, alias: string): Query
 
-  from(expressionOrTable: string, alias?: string): Query {
-    this._from.push(new From(expressionOrTable, alias))
+  from(...args: (string|CustomSqlPiece)[]): Query {
+    if (this._from == undefined) {
+      this._from = new SqlPieces(', ')
+    }
+
+    if (args.length == 1) {
+      this._from.push(args[0])
+    }
+    else if (args.length >= 2) {
+      this._from.push(new From(args[0] as string, args[1] as string))
+    }
+
     return this
   }
 
+  join(join: string|CustomSqlPiece): Query
   join(type: string, table: string, on: string): Query
   join(type: string, table: string, alias: string, on: string): Query
   join(table: string, on: string): Query
   join(table: string, alias: string, on: string): Query
 
-  join(typeOrTable: string, tableOrOnOrAlias: string, onOrAlias?: string, on?: string): Query {
-    let newJoin = new Join(typeOrTable, tableOrOnOrAlias, onOrAlias as any, on as any)
-    let joinAlreadyExists = false
-
-    for (let join of this._join) {
-      if (join.type === newJoin.type &&
-          join.table === newJoin.table &&
-          join.alias === newJoin.alias &&
-          join.on === newJoin.on) {
-        joinAlreadyExists = true
-        break
-      }
+  join(...args: any[]): Query {
+    if (this._join == undefined) {
+      this._join = new SqlPieces
     }
 
-    if (! joinAlreadyExists) {
-      this._join.push(newJoin)
+    if (args.length == 1) {
+      this._join.push(...args)
+    }
+    else {
+      let newJoin = new Join(args[0], args[1], args[2], args[3])
+      let newJoinSql = newJoin.sql()
+      let joinAlreadyExists = false
+  
+      if (this._join.pieces) {
+        for (let join of this._join.pieces) {
+          if (typeof join == 'string') {
+            if (join == newJoinSql) {
+              joinAlreadyExists = true
+              break  
+            }
+          }
+          else if (join !== null) {
+            if (join.sql('mysql') == newJoinSql) {
+              joinAlreadyExists = true
+              break                
+            }
+          }
+        }  
+      }
+  
+      if (! joinAlreadyExists) {
+        this._join.push(newJoin)
+      }        
     }
 
     return this
@@ -93,67 +154,119 @@ export class Query extends SqlPiece {
    * A USING statement like this: DELETE FROM A USING B, C
     * Supported in PostgreSQL 9.1+ (https://stackoverflow.com/questions/11753904/postgresql-delete-with-inner-join)
    */
-  using(...usings: string[]): Query {
+  using(...usings: (string|CustomSqlPiece)[]): Query {
+    if (this._using == undefined) {
+      this._using = new SqlPieces(', ')
+    }
+
     this._using.push(...usings)
     return this
   }
 
   value(column: string, value: any): Query {
+    if (this._valuesToSet == undefined) {
+      this._valuesToSet = []
+    }
+
     this._valuesToSet.push([column, value])
     return this
   }
 
   set(column: string, value: any): Query {
+    if (this._valuesToSet == undefined) {
+      this._valuesToSet = []
+    }
+    
     this._valuesToSet.push([column, value])
     return this
   }
 
   where(...conditions: any[]): Query {
-    this._where.pieces.push(...conditions)
+    if (this._where == undefined) {
+      this._where = new Condition
+    }
+
+    this._where.push(...conditions)
     return this
   }
 
   and(...conditions: any[]): Query {
-    this._where.pieces.push('AND', ...conditions)
+    if (this._where == undefined) {
+      this._where = new Condition
+    }
+
+    this._where.push('AND', ...conditions)
     return this
   }
 
   or(...conditions: any[]): Query {
-    this._where.pieces.push('OR', ...conditions)
+    if (this._where == undefined) {
+      this._where = new Condition
+    }
+
+    this._where.push('OR', ...conditions)
     return this
   }
 
   xor(...conditions: any[]): Query {
-    this._where.pieces.push('XOR', ...conditions)
+    if (this._where == undefined) {
+      this._where = new Condition
+    }
+
+    this._where.push('XOR', ...conditions)
     return this
   }
 
-  groupBy(...columns: string[]): Query {
+  groupBy(...columns: (string|CustomSqlPiece)[]): Query {
+    if (this._groupBy == undefined) {
+      this._groupBy = new SqlPieces(', ')
+    }
+
     this._groupBy.push(...columns)
     return this
   }
 
   having(...conditions: any[]): Query {
-    this._having.pieces.push(...conditions)
+    if (this._having == undefined) {
+      this._having = new Condition
+    }
+
+    this._having.push(...conditions)
     return this
   }
 
   andHaving(...conditions: any[]): Query {
-    this._having.pieces.push('AND', ...conditions)
+    if (this._having == undefined) {
+      this._having = new Condition
+    }
+
+    this._having.push('AND', ...conditions)
     return this
   }
 
   orHaving(...conditions: any[]): Query {
-    this._having.pieces.push('OR', ...conditions)
+    if (this._having == undefined) {
+      this._having = new Condition
+    }
+
+    this._having.push('OR', ...conditions)
     return this
   }
 
   xorHaving(...conditions: any[]): Query {
-    this._having.pieces.push('XOR', ...conditions)
+    if (this._having == undefined) {
+      this._having = new Condition
+    }
+
+    this._having.push('XOR', ...conditions)
     return this
   }
 
-  orderBy(...orderBys: string[]): Query {
+  orderBy(...orderBys: (string|CustomSqlPiece)[]): Query {
+    if (this._orderBy == undefined) {
+      this._orderBy = new SqlPieces(', ')
+    }
+
     this._orderBy.push(...orderBys)
     return this
   }
@@ -168,7 +281,11 @@ export class Query extends SqlPiece {
     return this
   }
 
-  returning(returning: string): Query {
+  returning(returning: string|CustomSqlPiece): Query {
+    if (this._returning == undefined) {
+      this._returning = new SqlPieces(', ')
+    }
+
     this._returning.push(returning)
     return this
   }
@@ -176,45 +293,39 @@ export class Query extends SqlPiece {
   sql(db: string, parameterTokens: ParameterTokens = new ParameterTokens): string {
     let sql = ''
 
-    if (this._select.length > 0) {
-      sql += 'SELECT ' + this._select.join(', ')
+    if (this._select) {
+      sql += 'SELECT ' + this._select.sql(db, parameterTokens)
     }
 
-    if (this._insertInto != undefined) {
-      sql += 'INSERT INTO ' + this._insertInto
+    if (this._insertInto) {
+      sql += 'INSERT INTO ' + this._insertInto.sql(db, parameterTokens)
     }
 
-    if (this._update != undefined) {
-      sql += 'UPDATE ' + this._update
+    if (this._update) {
+      sql += 'UPDATE ' + this._update.sql(db, parameterTokens)
     }
 
-    if (this._delete != undefined) {
-      sql += 'DELETE' + (this._delete.length > 0 ? ' ' + this._delete : '')
-    }
-
-    if (this._from.length > 0) {
-      sql += ' FROM '
-      let firstFrom = true
-
-      for (let from of this._from) {
-        if (!firstFrom) {
-          sql += ', '
-        }
-
-        sql += from.sql()
-        firstFrom = false
+    if (this._delete) {
+      sql += 'DELETE'
+      
+      if (! this._delete.isEmpty()) {
+        sql += ' ' + this._delete.sql(db, parameterTokens)
       }
     }
 
-    if (this._using.length > 0) {
-      sql += ' USING ' + this._using.join(', ')
+    if (this._from) {
+      sql += ' FROM ' + this._from.sql(db, parameterTokens)
     }
 
-    for (let join of this._join) {
-      sql += ' ' + join.sql()
+    if (this._using) {
+      sql += ' USING ' + this._using.sql(db, parameterTokens)
     }
 
-    if (this._insertInto != undefined && this._valuesToSet.length > 0) {
+    if (this._join) {
+      sql += ' ' + this._join.sql(db, parameterTokens)
+    }
+
+    if (this._insertInto && this._valuesToSet && this._valuesToSet.length > 0) {
       sql += ' ('
       let firstValue = true
 
@@ -245,7 +356,7 @@ export class Query extends SqlPiece {
       sql += ' DEFAULT VALUES'
     }
 
-    if (this._update != undefined && this._valuesToSet.length > 0) {
+    if (this._update && this._valuesToSet && this._valuesToSet.length > 0) {
       sql += ' SET '
       let firstValue = true
 
@@ -259,21 +370,20 @@ export class Query extends SqlPiece {
       }
     }
 
-    if (this._where.pieces.length > 0) {
+    if (this._where) {
       sql += ' WHERE ' + this._where.sql(db, parameterTokens)
     }
 
-    if (this._groupBy.length > 0) {
-      let groupBys = this._groupBy.join(', ')
-      sql += ' GROUP BY ' + groupBys
+    if (this._groupBy) {
+      sql += ' GROUP BY ' + this._groupBy.sql(db, parameterTokens)
     }
 
-    if (this._having.pieces.length > 0) {
+    if (this._having) {
       sql += ' HAVING ' + this._having.sql(db, parameterTokens)
     }
 
-    if (this._orderBy.length > 0) {
-      sql += ' ORDER BY ' + this._orderBy.join(', ')
+    if (this._orderBy) {
+      sql += ' ORDER BY ' + this._orderBy.sql(db, parameterTokens)
     }
 
     if (this._limit != undefined) {
@@ -284,18 +394,8 @@ export class Query extends SqlPiece {
       sql += ' OFFSET ' + parameterTokens.create(db)
     }
 
-    if (this._returning.length > 0) {
-      sql += ' RETURNING '
-      let firstReturning = true
-
-      for (let returning of this._returning) {
-        if (!firstReturning) {
-          sql += ', '
-        }
-
-        sql += returning
-        firstReturning = false
-      }
+    if (this._returning) {
+      sql += ' RETURNING ' + this._returning.sql(db, parameterTokens)
     }
 
     return sql
@@ -304,12 +404,55 @@ export class Query extends SqlPiece {
   values(): any[] {
     let values: any[] = []
 
-    for (let value of this._valuesToSet) {
-      values.push(value[1])
+    if (this._select) {
+      values.push(...this._select.values())
     }
 
-    values.push(...this._where.values())
-    values.push(...this._having.values())
+    if (this._insertInto) {
+      values.push(...this._insertInto.values())
+    }
+
+    if (this._update) {
+      values.push(...this._update.values())
+    }
+
+    if (this._delete) {
+      values.push(...this._delete.values())
+    }
+
+    if (this._from) {
+      values.push(...this._from.values())
+    }
+
+    if (this._using) {
+      values.push(...this._using.values())
+    }
+
+    if (this._join) {
+      values.push(...this._join.values())
+    }
+
+    if (this._valuesToSet) {
+      for (let value of this._valuesToSet) {
+        values.push(value[1])
+      }
+    }
+
+    if (this._where) {
+      values.push(...this._where.values())
+    }
+
+    if (this._groupBy) {
+      values.push(...this._groupBy.values())
+    }
+
+    if (this._having) {
+      values.push(...this._having.values())
+    }
+
+    if (this._orderBy) {
+      values.push(...this._orderBy.values())
+    }
 
     if (this._limit != undefined) {
       values.push(this._limit)
@@ -317,6 +460,10 @@ export class Query extends SqlPiece {
 
     if (this._offset != undefined) {
       values.push(this._offset)
+    }
+
+    if (this._returning) {
+      values.push(...this._returning.values())
     }
 
     return values

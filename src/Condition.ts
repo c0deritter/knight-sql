@@ -1,11 +1,11 @@
-import { ParameterTokens } from '.'
+import { CustomSqlPiece } from './CustomSqlPiece'
+import { ParameterTokens } from './ParameterTokens'
 import { Query } from './Query'
-import { SqlPiece } from './SqlPiece'
 import { Value } from './Value'
 
-export class Condition extends SqlPiece {
+export class Condition extends CustomSqlPiece {
 
-  pieces: any[] = []
+  pieces?: any[]
   removeOuterLogicalOperators: boolean = false
   surroundWithBrackets: boolean = false
 
@@ -15,26 +15,50 @@ export class Condition extends SqlPiece {
   }
 
   push(...pieces: any[]): Condition {
+    if (this.pieces == undefined) {
+      this.pieces = []
+    }
+
     this.pieces.push(...pieces)
     return this
   }
 
+  isEmpty(): boolean {
+    return ! this.pieces || this.pieces && this.pieces.length == 0
+  }
+
   and(...pieces: any[]): Condition {
+    if (this.pieces == undefined) {
+      this.pieces = []
+    }
+
     this.pieces.push('AND', ...pieces)
     return this
   }
 
   or(...pieces: any[]): Condition {
+    if (this.pieces == undefined) {
+      this.pieces = []
+    }
+
     this.pieces.push('OR', ...pieces)
     return this
   }
 
   xor(...pieces: any[]): Condition {
+    if (this.pieces == undefined) {
+      this.pieces = []
+    }
+
     this.pieces.push('XOR', ...pieces)
     return this
   }
 
   sql(db: string, parameterTokens: ParameterTokens = new ParameterTokens): string {
+    if (this.pieces == undefined) {
+      return ''
+    }
+
     let sql = ''
     let space = ''
     let withoutSpaceIndex = 0
@@ -109,7 +133,7 @@ export class Condition extends SqlPiece {
       else if (piece instanceof Query) {
         sql += space + '(' + piece.sql(db, parameterTokens) + ')'
       }
-      else if (piece instanceof SqlPiece) {
+      else if (piece instanceof CustomSqlPiece) {
         sql += space + piece.sql(db, parameterTokens)
       }
       else {
@@ -131,6 +155,10 @@ export class Condition extends SqlPiece {
   values(): any[] {
     let values: any[] = []
 
+    if (this.pieces == undefined) {
+      return values
+    }
+
     for (let piece of this.pieces) {
       if (piece instanceof Value) {
         if (piece.value instanceof Array) {
@@ -142,7 +170,7 @@ export class Condition extends SqlPiece {
           values.push(piece.value)
         }
       }
-      else if (piece instanceof SqlPiece) {
+      else if (piece instanceof CustomSqlPiece) {
         values.push(...piece.values())
       }
       else if (piece instanceof Query) {

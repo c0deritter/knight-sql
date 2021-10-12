@@ -142,12 +142,7 @@ query.values() == [ 1 ]
 
 #### SqlPiece
 
-An object of type `SqlPiece` renders to SQL. It is used to do some magic while converting to an SQL string. For example, this library comes with a class `Brackets` which will 
-
-This package comes with the following implementations.
-
-- `Brackets`: Adds brackets around a condition but only if it is not empty.
-- `Comparison`: Especially helps with `IS` and `IN` operators
+An object of type `SqlPiece` renders to SQL. It is used to do some magic while converting to an SQL string. 
 
 Here is a simple example for a new class implemented by you.
 

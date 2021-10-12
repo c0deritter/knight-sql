@@ -30,9 +30,9 @@ export default class {
 
 export * from './Comparison'
 export * from './Condition'
+export * from './CustomSqlPiece'
 export * from './From'
 export * from './Join'
 export * from './ParameterTokens'
 export * from './Query'
-export * from './SqlPiece'
 export * from './Value'

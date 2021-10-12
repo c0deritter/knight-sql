@@ -1,32 +1,25 @@
-export class From {
+import { CustomSqlPiece } from './CustomSqlPiece'
+import { ParameterTokens } from './ParameterTokens'
 
-  private static readonly regex = /(\w+)\s+(AS)?\s?(\w+)/i
+export class From extends CustomSqlPiece {
 
-  table!: string
-  alias?: string
+  table: string
+  alias: string
 
-  constructor(expression: string)
-  constructor(table: string, alias?: string)
+  constructor(table: string, alias: string)
 
-  constructor(expressionOrTable: string, alias?: string) {
-    if (expressionOrTable.indexOf(' ') == -1) {
-      this.table = expressionOrTable
-      this.alias = alias
-    }
-    else {
-      let result = From.regex.exec(expressionOrTable)
+  constructor(expressionOrTable: string, alias: string) {
+    super()
 
-      if (result != undefined) {
-        this.table = result[1]
-        this.alias = result[3]
-      }
-      else {
-        throw new Error('Given expression did not match the expected syntax: ' + expressionOrTable)
-      }
-    }
+    this.table = expressionOrTable
+    this.alias = alias
   }
 
-  sql(): string {
+  sql(db: string, parameterTokens?: ParameterTokens): string {
     return this.table + (this.alias != undefined && this.alias.length > 0 ? ' ' + this.alias : '')
+  }
+
+  values(): any[] {
+    return []
   }
 }

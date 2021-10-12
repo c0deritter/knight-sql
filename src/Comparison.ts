@@ -1,7 +1,7 @@
+import { CustomSqlPiece } from './CustomSqlPiece'
 import { ParameterTokens } from './ParameterTokens'
-import { SqlPiece } from './SqlPiece'
 
-export class Comparison extends SqlPiece {
+export class Comparison extends CustomSqlPiece {
 
   column: string
   operator: string

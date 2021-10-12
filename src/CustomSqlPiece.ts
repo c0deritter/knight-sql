@@ -1,6 +1,6 @@
 import { ParameterTokens } from './ParameterTokens'
 
-export abstract class SqlPiece {
+export abstract class CustomSqlPiece {
 
   abstract sql(db: string, parameterTokens?: ParameterTokens): string
   abstract values(): any[]

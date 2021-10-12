@@ -1,4 +1,7 @@
-export class Join {
+import { CustomSqlPiece } from './CustomSqlPiece'
+import { ParameterTokens } from './ParameterTokens'
+
+export class Join extends CustomSqlPiece {
 
   type?: string
   table: string
@@ -11,6 +14,8 @@ export class Join {
   constructor(table: string, alias: string, on: string)
 
   constructor(typeOrTable: string, tableOrOnOrAlias: string, onOrAlias?: string, on?: string) {
+    super()
+
     let upperCase = typeOrTable.toUpperCase()
 
     if (upperCase.startsWith('INNER') || upperCase.startsWith('LEFT') || 
@@ -39,11 +44,25 @@ export class Join {
     }
   }
 
-  sql(): string {
-    return (this.type != undefined && this.type.length > 0 ? this.type + ' ' : '') +
-      'JOIN ' +
-      this.table +
-      (this.alias != undefined && this.alias.length > 0 ? ' ' + this.alias : '') +
-      ' ON ' + this.on
+  sql(db?: string, parameterTokens?: ParameterTokens): string {
+    let sql = ''
+
+    if (this.type != undefined && this.type.length > 0) {
+      sql += this.type + ' '
+    }
+
+    sql += 'JOIN ' + this.table
+
+    if (this.alias != undefined && this.alias.length > 0) {
+      sql += ' ' + this.alias
+    }
+
+    sql += ' ON ' + this.on
+
+    return sql
+  }
+
+  values(): any[] {
+    return []
   }
 }
