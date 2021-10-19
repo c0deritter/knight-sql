@@ -184,6 +184,7 @@ export class Query extends CustomSqlPiece {
   where(...conditions: any[]): Query {
     if (this._where == undefined) {
       this._where = new Condition
+      this._where.removeOuterLogicalOperators = true
     }
 
     this._where.push(...conditions)
@@ -229,6 +230,7 @@ export class Query extends CustomSqlPiece {
   having(...conditions: any[]): Query {
     if (this._having == undefined) {
       this._having = new Condition
+      this._having.removeOuterLogicalOperators = true
     }
 
     this._having.push(...conditions)

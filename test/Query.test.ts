@@ -168,6 +168,12 @@ describe('Query', function() {
         expect(query.postgres()).to.equal('SELECT * FROM table WHERE a = $1 AND b > $2')
         expect(query.values()).to.deep.equal(['a','b'])
       })
+
+      it('should remove surrounding logical operators', function() {
+        let query = sql.select('*').from('table').where('AND', 'a =', value('a')).and('b >', value('b'), 'OR')
+        expect(query.postgres()).to.equal('SELECT * FROM table WHERE a = $1 AND b > $2')
+        expect(query.values()).to.deep.equal(['a','b'])
+      })
     })
 
     describe('JOIN', function() {
