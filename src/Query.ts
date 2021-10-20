@@ -296,15 +296,27 @@ export class Query extends CustomSqlPiece {
     let sql = ''
 
     if (this._select) {
-      sql += 'SELECT ' + this._select.sql(db, parameterTokens)
+      let select = this._select.sql(db, parameterTokens)
+
+      if (select.length > 0) {
+        sql += 'SELECT ' + select
+      }
     }
 
     if (this._insertInto) {
-      sql += 'INSERT INTO ' + this._insertInto.sql(db, parameterTokens)
+      let insertInto = this._insertInto.sql(db, parameterTokens)
+      
+      if (insertInto.length > 0) {
+        sql += 'INSERT INTO ' + insertInto
+      }
     }
 
     if (this._update) {
-      sql += 'UPDATE ' + this._update.sql(db, parameterTokens)
+      let update = this._update.sql(db, parameterTokens)
+
+      if (update.length > 0) {
+        sql += 'UPDATE ' + update
+      }
     }
 
     if (this._delete) {
@@ -316,15 +328,27 @@ export class Query extends CustomSqlPiece {
     }
 
     if (this._from) {
-      sql += ' FROM ' + this._from.sql(db, parameterTokens)
+      let from = this._from.sql(db, parameterTokens)
+
+      if (from.length > 0) {
+        sql += ' FROM ' + from
+      }
     }
 
     if (this._using) {
-      sql += ' USING ' + this._using.sql(db, parameterTokens)
+      let using = this._using.sql(db, parameterTokens)
+
+      if (using.length > 0) {
+        sql += ' USING ' + using
+      }
     }
 
     if (this._join) {
-      sql += ' ' + this._join.sql(db, parameterTokens)
+      let join = this._join.sql(db, parameterTokens)
+
+      if (join) {
+        sql += ' ' + join
+      }
     }
 
     if (this._insertInto && this._valuesToSet && this._valuesToSet.length > 0) {
@@ -373,19 +397,35 @@ export class Query extends CustomSqlPiece {
     }
 
     if (this._where) {
-      sql += ' WHERE ' + this._where.sql(db, parameterTokens)
+      let where = this._where.sql(db, parameterTokens)
+
+      if (where.length > 0) {
+        sql += ' WHERE ' + where
+      }
     }
 
     if (this._groupBy) {
-      sql += ' GROUP BY ' + this._groupBy.sql(db, parameterTokens)
+      let groupBy = this._groupBy.sql(db, parameterTokens)
+
+      if (groupBy.length > 0) {
+        sql += ' GROUP BY ' + groupBy
+      }
     }
 
     if (this._having) {
-      sql += ' HAVING ' + this._having.sql(db, parameterTokens)
+      let having = this._having.sql(db, parameterTokens)
+
+      if (having.length > 0) {
+        sql += ' HAVING ' + having
+      }
     }
 
     if (this._orderBy) {
-      sql += ' ORDER BY ' + this._orderBy.sql(db, parameterTokens)
+      let orderBy = this._orderBy.sql(db, parameterTokens)
+
+      if (orderBy.length > 0) {
+        sql += ' ORDER BY ' + orderBy
+      }
     }
 
     if (this._limit != undefined) {
@@ -397,7 +437,11 @@ export class Query extends CustomSqlPiece {
     }
 
     if (this._returning) {
-      sql += ' RETURNING ' + this._returning.sql(db, parameterTokens)
+      let returning = this._returning.sql(db, parameterTokens)
+
+      if (returning.length > 0) {
+        sql += ' RETURNING ' + returning
+      }
     }
 
     return sql
