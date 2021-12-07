@@ -14,7 +14,7 @@ export class Parameter extends CustomSqlPiece {
       let parameters: string[] = []
 
       for (let i = 0; i < this.value.length; i++) {
-        parameters.push(parameterTokens.create(db))
+        parameters.push(parameterTokens.sql(db))
       }
 
       return '(' + parameters.join(', ') + ')'
@@ -23,7 +23,7 @@ export class Parameter extends CustomSqlPiece {
       return 'NULL'
     }
 
-    return parameterTokens.create(db)
+    return parameterTokens.sql(db)
   }
 
   values(): any[] {

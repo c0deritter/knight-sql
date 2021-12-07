@@ -60,7 +60,7 @@ export class Comparison extends CustomSqlPiece {
 
       for (let arrayValue of this.value) {
         if (arrayValue !== undefined && arrayValue !== null) {
-          parameters.push(parameterTokens.create(db))
+          parameters.push(parameterTokens.sql(db))
         }
       }
 
@@ -77,7 +77,7 @@ export class Comparison extends CustomSqlPiece {
       }
     }
 
-    return this.column + ' ' + operator + ' ' + parameterTokens.create(db)
+    return this.column + ' ' + operator + ' ' + parameterTokens.sql(db)
   }
 
   values(): any[] {

@@ -119,7 +119,7 @@ export class Condition extends CustomSqlPiece {
         sql += space + piece.sql(db, parameterTokens)
       }
       else {
-        sql += space + parameterTokens.create(db)
+        sql += space + parameterTokens.sql(db)
       }
 
       if (space.length == 0) {

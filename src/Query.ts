@@ -372,7 +372,7 @@ export class Query extends CustomSqlPiece {
           sql += ', '
         }
 
-        sql += parameterTokens.create(db)
+        sql += parameterTokens.sql(db)
         firstValue = false
       }
 
@@ -391,7 +391,7 @@ export class Query extends CustomSqlPiece {
           sql += ', '
         }
 
-        sql += value[0] + ' = ' + parameterTokens.create(db)
+        sql += value[0] + ' = ' + parameterTokens.sql(db)
         firstValue = false
       }
     }
@@ -429,11 +429,11 @@ export class Query extends CustomSqlPiece {
     }
 
     if (this._limit != undefined) {
-      sql += ' LIMIT ' + parameterTokens.create(db)
+      sql += ' LIMIT ' + parameterTokens.sql(db)
     }
 
     if (this._offset != undefined) {
-      sql += ' OFFSET ' + parameterTokens.create(db)
+      sql += ' OFFSET ' + parameterTokens.sql(db)
     }
 
     if (this._returning) {

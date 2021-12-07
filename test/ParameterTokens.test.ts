@@ -13,7 +13,7 @@ describe('ParameterTokens', function () {
   describe('mysql', function () {
     it('should render a MySQL parameter token', function () {
       let parameterTokens = new ParameterTokens(2)
-      expect(parameterTokens.create('mysql')).to.equal('?')
+      expect(parameterTokens.sql('mysql')).to.equal('?')
       expect(parameterTokens.index).to.equal(2)
     })
   })
@@ -21,7 +21,7 @@ describe('ParameterTokens', function () {
   describe('postgres', function () {
     it('should render a MySQL parameter token', function () {
       let parameterTokens = new ParameterTokens(2)
-      expect(parameterTokens.create('postgres')).to.equal('$2')
+      expect(parameterTokens.sql('postgres')).to.equal('$2')
       expect(parameterTokens.index).to.equal(3)
     })
   })
