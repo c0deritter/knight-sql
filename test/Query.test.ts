@@ -1,6 +1,6 @@
 import { expect } from 'chai'
 import 'mocha'
-import sql, { value } from '../src'
+import sql, { parameter } from '../src'
 
 describe('Query', function() {
   describe('MySql', function() {
@@ -39,7 +39,7 @@ describe('Query', function() {
       })
 
       it('should add arbitrary conditions as having', function() {
-        let query = sql.select('*').from('table').where('column1 >', value(1)).groupBy('column1', 'column2').having('MAX(column1) >', value(5)).orderBy('column1')
+        let query = sql.select('*').from('table').where('column1 >', parameter(1)).groupBy('column1', 'column2').having('MAX(column1) >', parameter(5)).orderBy('column1')
         expect(query.mysql()).to.equal('SELECT * FROM table WHERE column1 > ? GROUP BY column1, column2 HAVING MAX(column1) > ? ORDER BY column1')
         expect(query.values()).to.deep.equal([1,5])
       })
@@ -74,13 +74,13 @@ describe('Query', function() {
 
     describe('WHERE', function() {
       it('should create a WHERE statement', function() {
-        let query = sql.select('*').from('table').where('a =', value('a')).and('b >', value('b'))
+        let query = sql.select('*').from('table').where('a =', parameter('a')).and('b >', parameter('b'))
         expect(query.mysql()).to.equal('SELECT * FROM table WHERE a = ? AND b > ?')
         expect(query.values()).to.deep.equal(['a','b'])
       })
 
       it('should create a WHERE statement connected through OR', function() {
-        let query = sql.select('*').from('table').where('a =', value('a')).and('b >', value('b'))
+        let query = sql.select('*').from('table').where('a =', parameter('a')).and('b >', parameter('b'))
         expect(query.mysql()).to.equal('SELECT * FROM table WHERE a = ? AND b > ?')
         expect(query.values()).to.deep.equal(['a','b'])
       })
@@ -123,7 +123,7 @@ describe('Query', function() {
       })
 
       it('should add arbitrary conditions as having', function() {
-        let query = sql.select('*').from('table').where('column1 >', value(1)).groupBy('column1', 'column2').having('MAX(column1) >', value(5)).orderBy('column1')
+        let query = sql.select('*').from('table').where('column1 >', parameter(1)).groupBy('column1', 'column2').having('MAX(column1) >', parameter(5)).orderBy('column1')
         expect(query.postgres()).to.equal('SELECT * FROM table WHERE column1 > $1 GROUP BY column1, column2 HAVING MAX(column1) > $2 ORDER BY column1')
         expect(query.values()).to.deep.equal([1,5])
       })
@@ -158,19 +158,19 @@ describe('Query', function() {
 
     describe('WHERE', function() {
       it('should create a WHERE statement', function() {
-        let query = sql.select('*').from('table').where('a =', value('a')).and('b >', value('b'))
+        let query = sql.select('*').from('table').where('a =', parameter('a')).and('b >', parameter('b'))
         expect(query.postgres()).to.equal('SELECT * FROM table WHERE a = $1 AND b > $2')
         expect(query.values()).to.deep.equal(['a','b'])
       })
 
       it('should create a WHERE statement connected through OR', function() {
-        let query = sql.select('*').from('table').where('a =', value('a')).and('b >', value('b'))
+        let query = sql.select('*').from('table').where('a =', parameter('a')).and('b >', parameter('b'))
         expect(query.postgres()).to.equal('SELECT * FROM table WHERE a = $1 AND b > $2')
         expect(query.values()).to.deep.equal(['a','b'])
       })
 
       it('should remove surrounding logical operators', function() {
-        let query = sql.select('*').from('table').where('AND', 'a =', value('a')).and('b >', value('b'), 'OR')
+        let query = sql.select('*').from('table').where('AND', 'a =', parameter('a')).and('b >', parameter('b'), 'OR')
         expect(query.postgres()).to.equal('SELECT * FROM table WHERE a = $1 AND b > $2')
         expect(query.values()).to.deep.equal(['a','b'])
       })

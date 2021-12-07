@@ -1,7 +1,7 @@
 import { CustomSqlPiece } from './CustomSqlPiece'
 import { ParameterTokens } from './ParameterTokens'
 
-export class Value extends CustomSqlPiece {
+export class Parameter extends CustomSqlPiece {
   value: any
 
   constructor(value: any) {
@@ -39,6 +39,6 @@ export class Value extends CustomSqlPiece {
   }
 }
 
-export function value(value: any): Value {
-  return new Value(value)
+export function parameter(value: any): Parameter {
+  return new Parameter(value)
 }
