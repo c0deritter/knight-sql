@@ -113,23 +113,6 @@ export class Condition extends CustomSqlPiece {
       else if (piece instanceof Array) {
         sql += space + '(' + piece.join(', ') + ')'
       }
-      else if (piece instanceof Value) {
-        if (piece.value instanceof Array) {
-          let parameters: string[] = []
-
-          for (let i = 0; i < piece.value.length; i++) {
-            parameters.push(parameterTokens.create(db))
-          }
-
-          sql += space + '(' + parameters.join(', ') + ')'
-        }
-        else if (piece.value === null) {
-          sql += space + 'NULL'
-        }
-        else {
-          sql += space + parameterTokens.create(db)
-        }
-      }
       else if (piece instanceof Query) {
         sql += space + '(' + piece.sql(db, parameterTokens) + ')'
       }
@@ -160,17 +143,7 @@ export class Condition extends CustomSqlPiece {
     }
 
     for (let piece of this.pieces) {
-      if (piece instanceof Value) {
-        if (piece.value instanceof Array) {
-          values.push(...piece.value)
-        }
-        else if (piece.value === null) {
-        }
-        else {
-          values.push(piece.value)
-        }
-      }
-      else if (piece instanceof CustomSqlPiece) {
+      if (piece instanceof CustomSqlPiece) {
         values.push(...piece.values())
       }
       else if (piece instanceof Query) {
