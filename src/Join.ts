@@ -1,5 +1,5 @@
+import { ParameterToken } from '.'
 import { CustomSqlPiece } from './CustomSqlPiece'
-import { ParameterTokens } from './ParameterTokens'
 
 export class Join extends CustomSqlPiece {
 
@@ -44,7 +44,7 @@ export class Join extends CustomSqlPiece {
     }
   }
 
-  sql(db?: string, parameterTokens?: ParameterTokens): string {
+  sql(db: string, parameterToken?: ParameterToken): string {
     let sql = ''
 
     if (this.type != undefined && this.type.length > 0) {

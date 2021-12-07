@@ -1,5 +1,5 @@
 import { CustomSqlPiece } from './CustomSqlPiece'
-import { ParameterTokens } from './ParameterTokens'
+import { ParameterToken } from './ParameterToken'
 import { Query } from './Query'
 
 export class Condition extends CustomSqlPiece {
@@ -53,7 +53,7 @@ export class Condition extends CustomSqlPiece {
     return this
   }
 
-  sql(db: string, parameterTokens: ParameterTokens = new ParameterTokens): string {
+  sql(db: string, parameterToken: ParameterToken = new ParameterToken): string {
     if (this.pieces == undefined) {
       return ''
     }
@@ -113,13 +113,13 @@ export class Condition extends CustomSqlPiece {
         sql += space + '(' + piece.join(', ') + ')'
       }
       else if (piece instanceof Query) {
-        sql += space + '(' + piece.sql(db, parameterTokens) + ')'
+        sql += space + '(' + piece.sql(db, parameterToken) + ')'
       }
       else if (piece instanceof CustomSqlPiece) {
-        sql += space + piece.sql(db, parameterTokens)
+        sql += space + piece.sql(db, parameterToken)
       }
       else {
-        sql += space + parameterTokens.sql(db)
+        sql += space + parameterToken.sql(db)
       }
 
       if (space.length == 0) {

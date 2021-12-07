@@ -1,6 +1,6 @@
 import { expect } from 'chai'
 import 'mocha'
-import sql, { Comparison, Condition, ParameterTokens, parameter } from '../src'
+import sql, { Comparison, Condition, ParameterToken, parameter } from '../src'
 
 describe('Condition', function () {
   describe('mysql', function () {
@@ -214,7 +214,7 @@ describe('Condition', function () {
 
     it('should render a comparison', function() {
       let condition = new Condition(new Comparison('column', 1))
-      expect(condition.sql('postgres', new ParameterTokens(2))).to.equal('column = $2')
+      expect(condition.sql('postgres', new ParameterToken(2))).to.equal('column = $2')
       expect(condition.values()).to.deep.equal([1])
     })
 
@@ -256,20 +256,20 @@ describe('Condition', function () {
       c7.removeOuterLogicalOperators = true
       c8.removeOuterLogicalOperators = true
 
-      expect(c1.postgres(new ParameterTokens(2))).to.equal('')
-      expect(c2.postgres(new ParameterTokens(2))).to.equal('')
-      expect(c3.postgres(new ParameterTokens(2))).to.equal('')
-      expect(c4.postgres(new ParameterTokens(2))).to.equal('')
-      expect(c5.postgres(new ParameterTokens(2))).to.equal('')
-      expect(c6.postgres(new ParameterTokens(2))).to.equal('')
-      expect(c7.postgres(new ParameterTokens(2))).to.equal('column = $2')
-      expect(c8.postgres(new ParameterTokens(2))).to.equal('column1 = $2 OR column2 = $3')
+      expect(c1.postgres(new ParameterToken(2))).to.equal('')
+      expect(c2.postgres(new ParameterToken(2))).to.equal('')
+      expect(c3.postgres(new ParameterToken(2))).to.equal('')
+      expect(c4.postgres(new ParameterToken(2))).to.equal('')
+      expect(c5.postgres(new ParameterToken(2))).to.equal('')
+      expect(c6.postgres(new ParameterToken(2))).to.equal('')
+      expect(c7.postgres(new ParameterToken(2))).to.equal('column = $2')
+      expect(c8.postgres(new ParameterToken(2))).to.equal('column1 = $2 OR column2 = $3')
     })
 
     it('should render brackets', function() {
       let condition = new Condition('column =', parameter(1))
       condition.surroundWithBrackets = true
-      expect(condition.postgres(new ParameterTokens(2))).to.equal('(column = $2)')
+      expect(condition.postgres(new ParameterToken(2))).to.equal('(column = $2)')
       expect(condition.values()).to.deep.equal([1])
     })
 

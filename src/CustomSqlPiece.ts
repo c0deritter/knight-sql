@@ -1,15 +1,15 @@
-import { ParameterTokens } from './ParameterTokens'
+import { ParameterToken } from './ParameterToken'
 
 export abstract class CustomSqlPiece {
 
-  abstract sql(db: string, parameterTokens?: ParameterTokens): string
+  abstract sql(db: string, parameterToken?: ParameterToken): string
   abstract values(): any[]
 
   mysql(): string {
     return this.sql('mysql')
   }
 
-  postgres(parameterTokens?: ParameterTokens): string {
-    return this.sql('postgres', parameterTokens)
+  postgres(parameterToken?: ParameterToken): string {
+    return this.sql('postgres', parameterToken)
   }
 }

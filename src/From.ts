@@ -1,5 +1,5 @@
+import { ParameterToken } from './ParameterToken'
 import { CustomSqlPiece } from './CustomSqlPiece'
-import { ParameterTokens } from './ParameterTokens'
 
 export class From extends CustomSqlPiece {
 
@@ -15,7 +15,7 @@ export class From extends CustomSqlPiece {
     this.alias = alias
   }
 
-  sql(db: string, parameterTokens?: ParameterTokens): string {
+  sql(db: string, parameterToken?: ParameterToken): string {
     return this.table + (this.alias != undefined && this.alias.length > 0 ? ' ' + this.alias : '')
   }
 

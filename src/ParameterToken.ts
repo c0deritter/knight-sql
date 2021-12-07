@@ -1,6 +1,6 @@
 import { CustomSqlPiece } from './CustomSqlPiece'
 
-export class ParameterTokens extends CustomSqlPiece {
+export class ParameterToken extends CustomSqlPiece {
   
   index: number
 
@@ -9,7 +9,7 @@ export class ParameterTokens extends CustomSqlPiece {
     this.index = index
   }
 
-  sql(db: string): string {
+  sql(db: string, parameterToken?: ParameterToken): string {
     if (db == 'postgres') {
       return '$' + this.index++
     }

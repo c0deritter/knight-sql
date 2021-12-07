@@ -1,5 +1,5 @@
 import { CustomSqlPiece } from './CustomSqlPiece'
-import { ParameterTokens } from './ParameterTokens'
+import { ParameterToken } from './ParameterToken'
 
 export class Comparison extends CustomSqlPiece {
 
@@ -25,7 +25,7 @@ export class Comparison extends CustomSqlPiece {
     }
   }
 
-  sql(db: string, parameterTokens: ParameterTokens = new ParameterTokens): string {
+  sql(db: string, parameterToken: ParameterToken = new ParameterToken): string {
     let operator = this.operator.toUpperCase()
 
     if (this.value === null) {
@@ -60,7 +60,7 @@ export class Comparison extends CustomSqlPiece {
 
       for (let arrayValue of this.value) {
         if (arrayValue !== undefined && arrayValue !== null) {
-          parameters.push(parameterTokens.sql(db))
+          parameters.push(parameterToken.sql(db))
         }
       }
 
@@ -77,7 +77,7 @@ export class Comparison extends CustomSqlPiece {
       }
     }
 
-    return this.column + ' ' + operator + ' ' + parameterTokens.sql(db)
+    return this.column + ' ' + operator + ' ' + parameterToken.sql(db)
   }
 
   values(): any[] {

@@ -1,4 +1,4 @@
-import { ParameterTokens } from './ParameterTokens'
+import { ParameterToken } from './ParameterToken'
 import { CustomSqlPiece } from './CustomSqlPiece'
 
 export class SqlPieces extends CustomSqlPiece {
@@ -24,7 +24,7 @@ export class SqlPieces extends CustomSqlPiece {
     return ! this.pieces || this.pieces && this.pieces.length == 0
   }
 
-  sql(db: string, parameterTokens?: ParameterTokens): string {
+  sql(db: string, parameterToken?: ParameterToken): string {
     if (this.pieces == undefined) {
       return ''
     }
@@ -36,7 +36,7 @@ export class SqlPieces extends CustomSqlPiece {
         sqlStrings.push(piece)
       }
       else if (piece !== null) {
-        sqlStrings.push(piece.sql(db, parameterTokens))
+        sqlStrings.push(piece.sql(db, parameterToken))
       }
     }
 

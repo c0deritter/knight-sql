@@ -2,7 +2,7 @@ import { Condition } from './Condition'
 import { CustomSqlPiece } from './CustomSqlPiece'
 import { From } from './From'
 import { Join } from './Join'
-import { ParameterTokens } from './ParameterTokens'
+import { ParameterToken } from './ParameterToken'
 import { SqlPieces } from './SqlPieces'
 
 export class Query extends CustomSqlPiece {
@@ -122,7 +122,7 @@ export class Query extends CustomSqlPiece {
     }
     else {
       let newJoin = new Join(args[0], args[1], args[2], args[3])
-      let newJoinSql = newJoin.sql()
+      let newJoinSql = newJoin.sql('mysql')
       let joinAlreadyExists = false
   
       if (this._join.pieces) {
@@ -292,11 +292,11 @@ export class Query extends CustomSqlPiece {
     return this
   }
 
-  sql(db: string, parameterTokens: ParameterTokens = new ParameterTokens): string {
+  sql(db: string, parameterToken: ParameterToken = new ParameterToken): string {
     let sql = ''
 
     if (this._select) {
-      let select = this._select.sql(db, parameterTokens)
+      let select = this._select.sql(db, parameterToken)
 
       if (select.length > 0) {
         sql += 'SELECT ' + select
@@ -304,7 +304,7 @@ export class Query extends CustomSqlPiece {
     }
 
     if (this._insertInto) {
-      let insertInto = this._insertInto.sql(db, parameterTokens)
+      let insertInto = this._insertInto.sql(db, parameterToken)
       
       if (insertInto.length > 0) {
         sql += 'INSERT INTO ' + insertInto
@@ -312,7 +312,7 @@ export class Query extends CustomSqlPiece {
     }
 
     if (this._update) {
-      let update = this._update.sql(db, parameterTokens)
+      let update = this._update.sql(db, parameterToken)
 
       if (update.length > 0) {
         sql += 'UPDATE ' + update
@@ -323,12 +323,12 @@ export class Query extends CustomSqlPiece {
       sql += 'DELETE'
       
       if (! this._delete.isEmpty()) {
-        sql += ' ' + this._delete.sql(db, parameterTokens)
+        sql += ' ' + this._delete.sql(db, parameterToken)
       }
     }
 
     if (this._from) {
-      let from = this._from.sql(db, parameterTokens)
+      let from = this._from.sql(db, parameterToken)
 
       if (from.length > 0) {
         sql += ' FROM ' + from
@@ -336,7 +336,7 @@ export class Query extends CustomSqlPiece {
     }
 
     if (this._using) {
-      let using = this._using.sql(db, parameterTokens)
+      let using = this._using.sql(db, parameterToken)
 
       if (using.length > 0) {
         sql += ' USING ' + using
@@ -344,7 +344,7 @@ export class Query extends CustomSqlPiece {
     }
 
     if (this._join) {
-      let join = this._join.sql(db, parameterTokens)
+      let join = this._join.sql(db, parameterToken)
 
       if (join) {
         sql += ' ' + join
@@ -372,7 +372,7 @@ export class Query extends CustomSqlPiece {
           sql += ', '
         }
 
-        sql += parameterTokens.sql(db)
+        sql += parameterToken.sql(db)
         firstValue = false
       }
 
@@ -391,13 +391,13 @@ export class Query extends CustomSqlPiece {
           sql += ', '
         }
 
-        sql += value[0] + ' = ' + parameterTokens.sql(db)
+        sql += value[0] + ' = ' + parameterToken.sql(db)
         firstValue = false
       }
     }
 
     if (this._where) {
-      let where = this._where.sql(db, parameterTokens)
+      let where = this._where.sql(db, parameterToken)
 
       if (where.length > 0) {
         sql += ' WHERE ' + where
@@ -405,7 +405,7 @@ export class Query extends CustomSqlPiece {
     }
 
     if (this._groupBy) {
-      let groupBy = this._groupBy.sql(db, parameterTokens)
+      let groupBy = this._groupBy.sql(db, parameterToken)
 
       if (groupBy.length > 0) {
         sql += ' GROUP BY ' + groupBy
@@ -413,7 +413,7 @@ export class Query extends CustomSqlPiece {
     }
 
     if (this._having) {
-      let having = this._having.sql(db, parameterTokens)
+      let having = this._having.sql(db, parameterToken)
 
       if (having.length > 0) {
         sql += ' HAVING ' + having
@@ -421,7 +421,7 @@ export class Query extends CustomSqlPiece {
     }
 
     if (this._orderBy) {
-      let orderBy = this._orderBy.sql(db, parameterTokens)
+      let orderBy = this._orderBy.sql(db, parameterToken)
 
       if (orderBy.length > 0) {
         sql += ' ORDER BY ' + orderBy
@@ -429,15 +429,15 @@ export class Query extends CustomSqlPiece {
     }
 
     if (this._limit != undefined) {
-      sql += ' LIMIT ' + parameterTokens.sql(db)
+      sql += ' LIMIT ' + parameterToken.sql(db)
     }
 
     if (this._offset != undefined) {
-      sql += ' OFFSET ' + parameterTokens.sql(db)
+      sql += ' OFFSET ' + parameterToken.sql(db)
     }
 
     if (this._returning) {
-      let returning = this._returning.sql(db, parameterTokens)
+      let returning = this._returning.sql(db, parameterToken)
 
       if (returning.length > 0) {
         sql += ' RETURNING ' + returning

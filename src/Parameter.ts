@@ -1,5 +1,5 @@
 import { CustomSqlPiece } from './CustomSqlPiece'
-import { ParameterTokens } from './ParameterTokens'
+import { ParameterToken } from './ParameterToken'
 
 export class Parameter extends CustomSqlPiece {
   value: any
@@ -9,12 +9,12 @@ export class Parameter extends CustomSqlPiece {
     this.value = value
   }
 
-  sql(db: string, parameterTokens: ParameterTokens = new ParameterTokens): string {
+  sql(db: string, parameterToken: ParameterToken = new ParameterToken): string {
     if (this.value instanceof Array) {
       let parameters: string[] = []
 
       for (let i = 0; i < this.value.length; i++) {
-        parameters.push(parameterTokens.sql(db))
+        parameters.push(parameterToken.sql(db))
       }
 
       return '(' + parameters.join(', ') + ')'
@@ -23,7 +23,7 @@ export class Parameter extends CustomSqlPiece {
       return 'NULL'
     }
 
-    return parameterTokens.sql(db)
+    return parameterToken.sql(db)
   }
 
   values(): any[] {

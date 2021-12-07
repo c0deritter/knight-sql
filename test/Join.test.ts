@@ -40,22 +40,22 @@ describe('Join', function() {
   describe('sql', function() {
     it('should render a JOIN without type', function() {
       let join = new Join('table1', 'table0.id = table1.id')
-      expect(join.sql()).to.equal('JOIN table1 ON table0.id = table1.id')
+      expect(join.sql('mysql')).to.equal('JOIN table1 ON table0.id = table1.id')
     })
   
     it('should render a JOIN without type and with an alias', function() {
       let join = new Join('table1', 't1', 'table0.id = t1.id')
-      expect(join.sql()).to.equal('JOIN table1 t1 ON table0.id = t1.id')
+      expect(join.sql('mysql')).to.equal('JOIN table1 t1 ON table0.id = t1.id')
     })
   
     it('should render a JOIN with a type', function() {
       let join = new Join('INNER', 'table1', 'table0.id = table1.id')
-      expect(join.sql()).to.equal('INNER JOIN table1 ON table0.id = table1.id')
+      expect(join.sql('mysql')).to.equal('INNER JOIN table1 ON table0.id = table1.id')
     })
 
     it('should render a JOIN with a type and with an alias', function() {
       let join = new Join('INNER', 'table1', 't1', 'table0.id = t1.id')
-      expect(join.sql()).to.equal('INNER JOIN table1 t1 ON table0.id = t1.id')
+      expect(join.sql('mysql')).to.equal('INNER JOIN table1 t1 ON table0.id = t1.id')
     })
   })
 })
