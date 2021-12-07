@@ -40,7 +40,9 @@ sql.select('DISTINCT ON (a) a', 'b, c')
 ### Render to SQL and get values array
 
 ```typescript
-let query = sql.select('*').from('table').where('id =', value(1))
+import { parameter } from 'knight-sql'
+
+let query = sql.select('*').from('table').where('id =', parameter(1))
 
 // create MySQL string
 query.mysql() == 'SELECT * FROM table WHERE id = ?'
@@ -88,11 +90,10 @@ A condition is used for `WHERE` and `HAVING` clauses. It is basically an array w
 
 - Strings and numbers are concatenated into the resulting SQL string
 - An object of type `Query` will be surrounded with brackets to represent a sub query
-- There can be objects following the `SqlPiece` interface which can to magic while rendering to SQL strings
+- There can be objects following the `CustomSqlPiece` interface which can to magic while rendering to SQL strings
 - A `null` value is becoming an SQL `NULL`
 - An array will be converted to `(value1, value2, ...)`
-- An object of type `Value` will be replaced through a parameter token i.e. `?` for MySql
-- Any other values like of type `Date` will also be replaced through a parameter token
+- Any other values like of type `Date` will be replaced through a parameter token
 
 #### Strings and numbers
 
@@ -116,10 +117,10 @@ query.values() == []
 
 #### Values
 
-You can also denote a value which will be replaced through a parameter token.
+You can also denote that a value will be replaced through a parameter token.
 
 ```typescript
-sql.select('*').from('table').where('id =', value(1))
+sql.select('*').from('table').where('id =', parameter(1))
 
 query.mysql() == 'SELECT * FROM table WHERE id = ?'
 query.postgres() == 'SELECT * FROM table WHERE id = $1'
@@ -132,7 +133,7 @@ query.values() == [ 1 ]
 You can give aliases seperately and they will be concatenated to the next string without a space.
 
 ```typescript
-sql.select('*').from('table AS t').where('t.', 'id =', value(1))
+sql.select('*').from('table AS t').where('t.', 'id =', parameter(1))
 
 query.mysql() == 'SELECT * FROM table AS t WHERE t.id = ?'
 query.postgres() == 'SELECT * FROM table AS t WHERE t.id = $1'
@@ -140,16 +141,16 @@ query.postgres() == 'SELECT * FROM table AS t WHERE t.id = $1'
 query.values() == [ 1 ]
 ```
 
-#### SqlPiece
+#### Custom SQL piece
 
-An object of type `SqlPiece` renders to SQL. It is used to do some magic while converting to an SQL string. 
+An object of type `CustomSqlPiece` renders to SQL. It is used to do some magic while converting to an SQL string. 
 
 Here is a simple example for a new class implemented by you.
 
 ```typescript
-import sql, { ParameterTokens, SqlPiece } from 'knight-sql'
+import sql, { ParameterToken, CustomSqlPiece } from 'knight-sql'
 
-class MoreIntelligent extends SqlPiece {
+class MoreIntelligent extends CustomSqlPiece {
 
   iq: number
 
@@ -159,8 +160,8 @@ class MoreIntelligent extends SqlPiece {
   }
 
   // return the SQL string which can include parameters
-  abstract sql(db: string, parameterTokens: ParameterTokens = new ParameterTokens): string {
-    return 'iq > ' + parameterToken.create(db)
+  abstract sql(db: string, parameterToken: ParameterToken = new ParameterToken): string {
+    return 'iq > ' + parameterToken.sql(db)
   }
   
   // return the values for parameters contained in the SQL string
@@ -170,9 +171,9 @@ class MoreIntelligent extends SqlPiece {
 }
 ```
 
-The class `ParameterTokens` creates a parameter token specific to the used database system. In the case of PostgreSQL it also keeps track of the last parameter index to create the parameter tokens like `$1`, `$2` and `$3`.
+The class `ParameterToken` creates a parameter token specific to the used database system. In the case of PostgreSQL it also keeps track of the last parameter index to create the parameter tokens like `$1`, `$2` and `$3`.
 
-#### Comparison (SqlPiece)
+#### Comparison
 
 The class `Comparison` helps in creating simple comparisons which follow the pattern `<column> <operator> <value>`.
 
