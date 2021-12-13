@@ -379,7 +379,12 @@ export class Query extends CustomSqlPiece {
       sql += ')'
     }
     else if (this._insertInto != undefined) {
-      sql += ' DEFAULT VALUES'
+      if (db == 'postgres') {
+        sql += ' DEFAULT VALUES'
+      }
+      else {
+        sql += ' VALUES ()'
+      }
     }
 
     if (this._update && this._valuesToSet && this._valuesToSet.length > 0) {
