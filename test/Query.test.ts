@@ -48,6 +48,11 @@ describe('Query', function() {
         let query = sql.select('*').from('table').orderBy('column1', 'column2 ASC', 'column3, column4 DESC')
         expect(query.mysql()).to.deep.equal('SELECT * FROM table ORDER BY column1, column2 ASC, column3, column4 DESC')
       })
+
+      it('should add an OFFSET statement', function () {
+        let query = sql.select('*').from('table').offset(10)
+        expect(query.mysql()).to.deep.equal('SELECT * FROM table LIMIT 18446744073709551615 OFFSET 10')
+      })
     })
 
     describe('DELETE FROM', function() {
@@ -131,6 +136,11 @@ describe('Query', function() {
       it('should add an ORDER BY statement', function () {
         let query = sql.select('*').from('table').orderBy('column1', 'column2 ASC', 'column3, column4 DESC')
         expect(query.postgres()).to.deep.equal('SELECT * FROM table ORDER BY column1, column2 ASC, column3, column4 DESC')
+      })
+
+      it('should add an OFFSET statement', function () {
+        let query = sql.select('*').from('table').offset(10)
+        expect(query.postgres()).to.deep.equal('SELECT * FROM table OFFSET 10')
       })
     })
 

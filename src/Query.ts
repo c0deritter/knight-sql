@@ -434,17 +434,25 @@ export class Query extends CustomSqlPiece {
     }
 
     if (this._limit != undefined) {
-      sql += ' LIMIT ' + parameterToken.sql(db)
+      if (typeof this._limit == 'number') {
+        sql += ' LIMIT ' + this._limit
+      }
     }
 
     if (this._offset != undefined) {
-      sql += ' OFFSET ' + parameterToken.sql(db)
+      if ((db == 'mysql' || db == 'mariadb') && this._limit == undefined) {
+        sql += ' LIMIT 18446744073709551615'
+      }
+
+      if (typeof this._offset == 'number') {
+        sql += ' OFFSET ' + this._offset
+      }
     }
 
     if (this._returning) {
       let returning = this._returning.sql(db, parameterToken)
 
-      if (returning.length > 0) {
+      if (returning.length > 0) {
         sql += ' RETURNING ' + returning
       }
     }
@@ -503,14 +511,6 @@ export class Query extends CustomSqlPiece {
 
     if (this._orderBy) {
       values.push(...this._orderBy.values())
-    }
-
-    if (this._limit != undefined) {
-      values.push(this._limit)
-    }
-
-    if (this._offset != undefined) {
-      values.push(this._offset)
     }
 
     if (this._returning) {
