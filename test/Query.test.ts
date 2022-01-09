@@ -16,7 +16,7 @@ describe('Query', function() {
       it('should create an insert into SQL statement for an empty row', function() {
         let query = sql.insertInto('table')
         let sqlString = query.mysql()
-        expect(sqlString).to.equal('INSERT INTO table DEFAULT VALUES')
+        expect(sqlString).to.equal('INSERT INTO table VALUES ()')
       })    
     })
 
